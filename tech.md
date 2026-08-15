@@ -1,12 +1,13 @@
 # BOROZDOV LINK — tech.md
 
-v3 — User type, auth request schemas
+v4 — DailyLinkStat type, claim-link schema, личный кабинет endpoints
 
 ## Changelog
 
 - v1 — первая версия ядра.
 - v2 — добавлены `types/Link.ts`, `types/Click.ts`, `schemas/link-stats.ts` (контракт `GET /api/links/stats/:secretToken` для Задачи 2).
 - v3 — добавлены `types/User.ts`, `schemas/auth.ts` (контракты `RegisterRequest`/`LoginRequest` для Задачи 3).
+- v4 — добавлены `types/DailyLinkStat.ts`, `schemas/claim-link.ts`, эндпоинты `/api/users/links*` (личный кабинет и claim для Задачи 4).
 
 ## Проект
 
@@ -201,14 +202,24 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
 
 - `types/Link.ts` — `Link` (поля модели без `secretToken`/`ipHash`-деталей клиента, публичная проекция), `LinkStatus`.
 - `types/User.ts` — `User` (без `passwordHash`), `Role`.
-- `types/Click.ts` — `Click`. `DailyLinkStat` добавляется в Задаче 4 — первой задаче, которая его реально использует.
+- `types/Click.ts` — `Click`.
+- `types/DailyLinkStat.ts` — `DailyLinkStat { linkId: string; date: string; clickCount: number }` — публичная проекция модели `DailyLinkStat` (даты в ISO). Добавлен в Задаче 4 — первой задаче, которая его реально использует (график кликов в личном кабинете).
 - `types/ApiResponse.ts` — `ApiResponse<T> = { data: T } | { error: { code: string; message: string } }`. Оборачивает ответ каждого эндпоинта без исключений (используется в каждой задаче трека).
 - `types/Theme.ts` — `Theme = 'obsidian' | 'titan'`. Используется `ThemeProvider`/`ThemeToggle` в общем layout (раздел «Скелет», п.4) — на нём рендерятся страницы всех задач.
 - `schemas/create-link.ts` — Zod: `CreateLinkRequest { targetUrl: string; customSlug?: string; expiresInHours?: number; utm?: { source?: string; medium?: string; campaign?: string } }`, `CreateLinkResponse { shortUrl: string; uid: string; secretToken: string; qrUrl: string }`.
 - `schemas/bulk-text.ts` — Zod: `BulkTextRequest { text: string }` (лимит 50 000 символов, максимум 200 ссылок за запрос), `BulkTextResponse { text: string; created: Array<{ original: string; short: string }> }`.
 - `schemas/auth.ts` — `RegisterRequest { email: string; password: string }`, `LoginRequest { email: string; password: string }`.
-- `schemas/claim-link.ts` — `ClaimLinkRequest { secretToken: string }`.
+- `schemas/claim-link.ts` — Zod: `ClaimLinkRequest { secretToken: string }` (непустая строка). Ответ переиспользует существующий тип `Link` (без отдельной Zod-схемы) — обёрнут в `ApiResponse<Link>`.
 - `schemas/link-stats.ts` — Zod: `LinkStatsResponse { uid: string; shortUrl: string; status: LinkStatus; targetUrl: string; createdAt: string; expiresAt: string | null; clickCount: number; clicks: Array<{ occurredAt: string; referrer: string | null }> }`. `GET /api/links/stats/:secretToken`, без логина. `clicks` — последние 100 по `occurredAt` desc, без пагинации в MVP.
+
+### Эндпоинты личного кабинета (Задача 4)
+
+Домен `apps/api/src/domains/users/`, роуты под `/api/users`, все — за `authGuard`.
+
+- `GET /api/users/links` → `ApiResponse<Link[]>`. Ссылки где `ownerId = req.user.id`, сортировка по `createdAt` desc, без пагинации в MVP (тот же прецедент, что и `clicks` в `LinkStatsResponse`).
+- `GET /api/users/links/:id/stats` → `ApiResponse<{ link: Link; dailyStats: DailyLinkStat[]; clicks: Click[] }>`. `404 NOT_FOUND`, если ссылка не найдена или не принадлежит вызывающему (не палим существование чужой ссылки). `clicks` — последние 100 по `occurredAt` desc.
+- `POST /api/users/links/claim` → body `ClaimLinkRequest` → `ApiResponse<Link>`. `404 NOT_FOUND` — неизвестный `secretToken`; `409 ALREADY_CLAIMED` — у ссылки уже есть `ownerId` (не важно, чей — тот же пользователь или другой).
+- `POST /api/users/links/:id/unclaim` → `ApiResponse<Link>`. Ставит `ownerId = null` (обратное действие к claim; статус и `clickCount` ссылки не трогает, редирект продолжает работать анонимно). `404 NOT_FOUND`, если ссылка не найдена или не принадлежит вызывающему.
 
 ## UI-примитивы
 
@@ -378,3 +389,9 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
   Предлагаемая форма: см. раздел «Общие типы» (уже описана).
   Временная заглушка: не потребовалась — единственный трек, гэп закрыт в том же PR отдельным контрактным коммитом перед фиче-кодом.
   Статус: closed (v3)
+
+- Что нужно: `types/DailyLinkStat.ts`, `schemas/claim-link.ts` (полная форма, включая ответ), эндпоинты `GET /api/users/links`, `GET /api/users/links/:id/stats`, `POST /api/users/links/claim`, `POST /api/users/links/:id/unclaim`.
+  Зачем: Задача 4 (личный кабинет) — список своих ссылок, статистика по каждой (график по `DailyLinkStat`), claim анонимной ссылки по `secretToken`. tech.md фиксировал только `ClaimLinkRequest`/`DailyLinkStat` как контракты Задачи 4 без формы ответов и без формы эндпоинтов личного кабинета; список/стата/unclaim-эндпоинты и разрешение «удаления» как un-claim (симметрично claim, без пересечения с админ-модерацией `DISABLED` из Задачи 5) — решения, принятые при подготовке слайса.
+  Предлагаемая форма: см. раздел «Общие типы» → «Эндпоинты личного кабинета (Задача 4)» (уже описана).
+  Временная заглушка: не потребовалась — единственный трек, гэп закрыт в том же PR отдельным контрактным коммитом перед фиче-кодом.
+  Статус: closed (v4)
