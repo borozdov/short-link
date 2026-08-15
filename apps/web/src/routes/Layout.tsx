@@ -14,9 +14,14 @@ export function Layout() {
         <div className={styles.actions}>
           {!loading &&
             (user ? (
-              <Button size="sm" onClick={logout}>
-                Log out
-              </Button>
+              <>
+                <Link className={styles.navLink} to="/dashboard">
+                  Dashboard
+                </Link>
+                <Button size="sm" onClick={logout}>
+                  Log out
+                </Button>
+              </>
             ) : (
               <>
                 <Link className={styles.navLink} to="/login">
