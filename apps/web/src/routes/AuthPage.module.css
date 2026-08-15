@@ -1,0 +1,16 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.switch {
+  margin: 0;
+  font-size: 13px;
+  color: var(--soft);
+  text-align: center;
+}
+
+.switch a {
+  color: var(--text);
+}
