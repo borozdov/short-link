@@ -1,7 +1,11 @@
 import type {
   ApiResponse,
+  ClaimLinkRequest,
+  Click,
   CreateLinkRequest,
   CreateLinkResponse,
+  DailyLinkStat,
+  Link,
   LinkStatsResponse,
   LoginRequest,
   RegisterRequest,
@@ -99,6 +103,72 @@ export async function getCurrentUser(): Promise<User> {
   });
 
   const body = (await response.json()) as ApiResponse<User>;
+
+  if ('error' in body) {
+    throw new ApiError(body.error.code, body.error.message);
+  }
+
+  return body.data;
+}
+
+export async function getUserLinks(): Promise<Link[]> {
+  const response = await fetch(`${API_BASE_URL}/api/users/links`, {
+    credentials: 'include',
+  });
+
+  const body = (await response.json()) as ApiResponse<Link[]>;
+
+  if ('error' in body) {
+    throw new ApiError(body.error.code, body.error.message);
+  }
+
+  return body.data;
+}
+
+export interface UserLinkStats {
+  link: Link;
+  dailyStats: DailyLinkStat[];
+  clicks: Click[];
+}
+
+export async function getUserLinkStats(id: string): Promise<UserLinkStats> {
+  const response = await fetch(`${API_BASE_URL}/api/users/links/${id}/stats`, {
+    credentials: 'include',
+  });
+
+  const body = (await response.json()) as ApiResponse<UserLinkStats>;
+
+  if ('error' in body) {
+    throw new ApiError(body.error.code, body.error.message);
+  }
+
+  return body.data;
+}
+
+export async function claimLink(payload: ClaimLinkRequest): Promise<Link> {
+  const response = await fetch(`${API_BASE_URL}/api/users/links/claim`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  });
+
+  const body = (await response.json()) as ApiResponse<Link>;
+
+  if ('error' in body) {
+    throw new ApiError(body.error.code, body.error.message);
+  }
+
+  return body.data;
+}
+
+export async function unclaimLink(id: string): Promise<Link> {
+  const response = await fetch(`${API_BASE_URL}/api/users/links/${id}/unclaim`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  const body = (await response.json()) as ApiResponse<Link>;
 
   if ('error' in body) {
     throw new ApiError(body.error.code, body.error.message);
