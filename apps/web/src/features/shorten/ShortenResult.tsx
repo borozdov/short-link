@@ -9,7 +9,6 @@ export interface ShortenResultProps {
 }
 
 export function ShortenResult({ result }: ShortenResultProps) {
-  // Task 2 turns this into a real link once /s/:secretToken exists.
   const statsUrl = `${window.location.origin}/s/${result.secretToken}`;
 
   return (
