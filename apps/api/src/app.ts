@@ -5,6 +5,7 @@ import { HttpError } from './middleware/http-error.js';
 import { linksRouter } from './domains/links/router.js';
 import { redirectLink } from './domains/links/redirect.js';
 import { authRouter } from './domains/auth/router.js';
+import { usersRouter } from './domains/users/router.js';
 
 export const app = express();
 
@@ -13,6 +14,7 @@ app.use(cookieParser());
 
 app.use('/api/links', linksRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/users', usersRouter);
 
 app.use('/api', (_req, _res, next) => {
   next(new HttpError(404, 'NOT_FOUND', 'Not found'));
