@@ -8,3 +8,4 @@ export * from './schemas/create-link';
 export * from './schemas/link-stats';
 export * from './schemas/auth';
 export * from './schemas/claim-link';
+export * from './schemas/bulk-text';
