@@ -1,10 +1,11 @@
 # BOROZDOV LINK — tech.md
 
-v1 — initial
+v2 — Link/Click types, link-stats contract
 
 ## Changelog
 
 - v1 — первая версия ядра.
+- v2 — добавлены `types/Link.ts`, `types/Click.ts`, `schemas/link-stats.ts` (контракт `GET /api/links/stats/:secretToken` для Задачи 2).
 
 ## Проект
 
@@ -199,13 +200,14 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
 
 - `types/Link.ts` — `Link` (поля модели без `secretToken`/`ipHash`-деталей клиента, публичная проекция), `LinkStatus`.
 - `types/User.ts` — `User` (без `passwordHash`), `Role`.
-- `types/Click.ts` — `Click`, `DailyLinkStat`.
+- `types/Click.ts` — `Click`. `DailyLinkStat` добавляется в Задаче 4 — первой задаче, которая его реально использует.
 - `types/ApiResponse.ts` — `ApiResponse<T> = { data: T } | { error: { code: string; message: string } }`. Оборачивает ответ каждого эндпоинта без исключений (используется в каждой задаче трека).
 - `types/Theme.ts` — `Theme = 'obsidian' | 'titan'`. Используется `ThemeProvider`/`ThemeToggle` в общем layout (раздел «Скелет», п.4) — на нём рендерятся страницы всех задач.
 - `schemas/create-link.ts` — Zod: `CreateLinkRequest { targetUrl: string; customSlug?: string; expiresInHours?: number; utm?: { source?: string; medium?: string; campaign?: string } }`, `CreateLinkResponse { shortUrl: string; uid: string; secretToken: string; qrUrl: string }`.
 - `schemas/bulk-text.ts` — Zod: `BulkTextRequest { text: string }` (лимит 50 000 символов, максимум 200 ссылок за запрос), `BulkTextResponse { text: string; created: Array<{ original: string; short: string }> }`.
 - `schemas/auth.ts` — `RegisterRequest { email: string; password: string }`, `LoginRequest { email: string; password: string }`.
 - `schemas/claim-link.ts` — `ClaimLinkRequest { secretToken: string }`.
+- `schemas/link-stats.ts` — Zod: `LinkStatsResponse { uid: string; shortUrl: string; status: LinkStatus; targetUrl: string; createdAt: string; expiresAt: string | null; clickCount: number; clicks: Array<{ occurredAt: string; referrer: string | null }> }`. `GET /api/links/stats/:secretToken`, без логина. `clicks` — последние 100 по `occurredAt` desc, без пагинации в MVP.
 
 ## UI-примитивы
 
@@ -354,7 +356,7 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
 
 ## Очередь контрактов
 
-Пусто на старте. Формат записи при `CONTRACT GAP`:
+Формат записи при `CONTRACT GAP`:
 
 ```
 - Что нужно:
@@ -363,3 +365,9 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
   Временная заглушка:
   Статус: open | closed (vX)
 ```
+
+- Что нужно: `GET /api/links/stats/:secretToken` response contract.
+  Зачем: страница `/s/:secretToken` (Задача 2) показывает статус, счётчик кликов и таймлайн кликов без логина.
+  Предлагаемая форма: `schemas/link-stats.ts` — `LinkStatsResponse` (см. раздел «Общие типы»).
+  Временная заглушка: не потребовалась — единственный трек, гэп закрыт в том же PR отдельным контрактным коммитом перед фиче-кодом.
+  Статус: closed (v2)
