@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import request from 'supertest';
 import { app } from '../../src/app.js';
 import { prisma } from '../../src/db/client.js';
+import { env } from '../../src/config/env.js';
 
 describe('GET /:uid', () => {
   it('redirects an active link and records exactly one click', async () => {
@@ -23,5 +24,47 @@ describe('GET /:uid', () => {
 
     const updatedLink = await prisma.link.findUniqueOrThrow({ where: { id: link.id } });
     expect(updatedLink.clickCount).toBe(1);
+  });
+
+  it('falls back to BASE_FALLBACK_URL for an unknown uid', async () => {
+    const response = await request(app).get('/does-not-exist');
+
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe(env.BASE_FALLBACK_URL);
+    expect(await prisma.click.count()).toBe(0);
+  });
+
+  it('falls back to BASE_FALLBACK_URL for an expired link', async () => {
+    const link = await prisma.link.create({
+      data: {
+        uid: 'expiredlnk',
+        targetUrl: 'https://example.com/expired',
+        secretToken: 'expired-secret-token',
+        status: 'EXPIRED',
+      },
+    });
+
+    const response = await request(app).get(`/${link.uid}`);
+
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe(env.BASE_FALLBACK_URL);
+    expect(await prisma.click.count({ where: { linkId: link.id } })).toBe(0);
+  });
+
+  it('falls back to BASE_FALLBACK_URL for a disabled link', async () => {
+    const link = await prisma.link.create({
+      data: {
+        uid: 'disabledlnk',
+        targetUrl: 'https://example.com/disabled',
+        secretToken: 'disabled-secret-token',
+        status: 'DISABLED',
+      },
+    });
+
+    const response = await request(app).get(`/${link.uid}`);
+
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe(env.BASE_FALLBACK_URL);
+    expect(await prisma.click.count({ where: { linkId: link.id } })).toBe(0);
   });
 });
