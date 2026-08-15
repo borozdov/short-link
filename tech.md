@@ -1,11 +1,12 @@
 # BOROZDOV LINK — tech.md
 
-v2 — Link/Click types, link-stats contract
+v3 — User type, auth request schemas
 
 ## Changelog
 
 - v1 — первая версия ядра.
 - v2 — добавлены `types/Link.ts`, `types/Click.ts`, `schemas/link-stats.ts` (контракт `GET /api/links/stats/:secretToken` для Задачи 2).
+- v3 — добавлены `types/User.ts`, `schemas/auth.ts` (контракты `RegisterRequest`/`LoginRequest` для Задачи 3).
 
 ## Проект
 
@@ -371,3 +372,9 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
   Предлагаемая форма: `schemas/link-stats.ts` — `LinkStatsResponse` (см. раздел «Общие типы»).
   Временная заглушка: не потребовалась — единственный трек, гэп закрыт в том же PR отдельным контрактным коммитом перед фиче-кодом.
   Статус: closed (v2)
+
+- Что нужно: `types/User.ts` (`User` публичная проекция, `Role`) и `schemas/auth.ts` (`RegisterRequest`/`LoginRequest`).
+  Зачем: Задача 3 (аутентификация) — регистрация, логин, JWT access/refresh, роли `USER`/`ADMIN`.
+  Предлагаемая форма: см. раздел «Общие типы» (уже описана).
+  Временная заглушка: не потребовалась — единственный трек, гэп закрыт в том же PR отдельным контрактным коммитом перед фиче-кодом.
+  Статус: closed (v3)
