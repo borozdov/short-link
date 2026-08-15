@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import type { z } from 'zod';
-import { CreateLinkRequestSchema } from '@short-link/shared';
+import { CreateLinkRequestSchema, type CreateLinkRequest } from '@short-link/shared';
 import { prisma } from '../../db/client.js';
 import { Prisma, type Link } from '../../generated/prisma/client.js';
 import { env } from '../../config/env.js';
@@ -36,20 +36,37 @@ function sendLink(res: Response, link: Link): void {
   });
 }
 
+// Fields shared by both the custom-slug and generated-uid create paths below.
+function baseLinkData(input: CreateLinkRequest) {
+  const expiresAt = input.expiresInHours
+    ? new Date(Date.now() + input.expiresInHours * 60 * 60 * 1000)
+    : null;
+
+  return {
+    targetUrl: input.targetUrl,
+    secretToken: generateSecretToken(),
+    expiresAt,
+    // Accepted and stored even though the Task 1 form has no UTM inputs yet (Task 7's job) —
+    // keeps the frozen request contract genuinely implemented server-side.
+    utmSource: input.utm?.source ?? null,
+    utmMedium: input.utm?.medium ?? null,
+    utmCampaign: input.utm?.campaign ?? null,
+  };
+}
+
 export async function createLink(req: Request, res: Response): Promise<void> {
   const parsed = CreateLinkRequestSchema.safeParse(req.body);
   if (!parsed.success) {
     throwForValidationError(parsed.error);
   }
-  const { targetUrl, customSlug } = parsed.data;
+  const input = parsed.data;
 
-  if (customSlug) {
+  if (input.customSlug) {
     try {
       const link = await prisma.link.create({
         data: {
-          uid: customSlug,
-          targetUrl,
-          secretToken: generateSecretToken(),
+          ...baseLinkData(input),
+          uid: input.customSlug,
           isCustomSlug: true,
         },
       });
@@ -67,9 +84,8 @@ export async function createLink(req: Request, res: Response): Promise<void> {
     try {
       const link = await prisma.link.create({
         data: {
+          ...baseLinkData(input),
           uid: generateUid(),
-          targetUrl,
-          secretToken: generateSecretToken(),
         },
       });
       sendLink(res, link);
