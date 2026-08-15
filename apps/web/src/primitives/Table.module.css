@@ -1,0 +1,39 @@
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.table th {
+  background: var(--inset);
+  color: var(--slate);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.table tbody tr:hover {
+  background: var(--hover);
+}
+
+.numeric {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.empty {
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+  color: var(--slate);
+  font-size: 14px;
+}
