@@ -15,6 +15,17 @@ async function main() {
     },
   });
 
+  const demoUserPasswordHash = await bcrypt.hash('demo-user-password', 10);
+  await prisma.user.upsert({
+    where: { email: 'demo@local.test' },
+    update: {},
+    create: {
+      email: 'demo@local.test',
+      passwordHash: demoUserPasswordHash,
+      role: 'USER',
+    },
+  });
+
   const activeLink = await prisma.link.upsert({
     where: { uid: 'demo001' },
     update: {},
@@ -55,6 +66,19 @@ async function main() {
     },
   });
 
+  // Unclaimed — demos the Task 4 claim flow (its secretToken is logged below).
+  const anonymousLink = await prisma.link.upsert({
+    where: { uid: 'demo003' },
+    update: {},
+    create: {
+      uid: 'demo003',
+      targetUrl: 'https://borozdov.ru/anonymous',
+      secretToken: generateSecretToken(),
+      status: 'ACTIVE',
+      ownerId: null,
+    },
+  });
+
   await prisma.click.deleteMany({
     where: { linkId: { in: [activeLink.id, customSlugLink.id] } },
   });
@@ -66,7 +90,28 @@ async function main() {
     ],
   });
 
-  console.log('Seed complete.');
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  const today = new Date();
+  const todayUtc = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+  const dailyCounts = [2, 0, 5, 3, 1, 4, 2];
+
+  await prisma.dailyLinkStat.deleteMany({
+    where: { linkId: { in: [activeLink.id, customSlugLink.id] } },
+  });
+  for (const [linkId, counts] of [
+    [activeLink.id, dailyCounts],
+    [customSlugLink.id, dailyCounts.map((count) => Math.max(0, count - 1))],
+  ] as const) {
+    await prisma.dailyLinkStat.createMany({
+      data: counts.map((clickCount, dayIndex) => ({
+        linkId,
+        date: new Date(todayUtc.getTime() - (counts.length - dayIndex) * oneDayMs),
+        clickCount,
+      })),
+    });
+  }
+
+  console.log(`Seed complete. Anonymous link secretToken (for claim demo): ${anonymousLink.secretToken}`);
 }
 
 main()
