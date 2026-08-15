@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  emailVerifiedAt DateTime?
+  createdAt    DateTime @default(now())
+  links        Link[]
+  apiKeys      ApiKey[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Link {
+  id          String     @id @default(uuid())
+  uid         String     @unique              // путь /{uid}
+  targetUrl   String
+  ownerId     String?
+  owner       User?      @relation(fields: [ownerId], references: [id])
+  isCustomSlug Boolean   @default(false)
+  secretToken String     @unique               // доступ к статистике без логина
+  status      LinkStatus @default(ACTIVE)
+  expiresAt   DateTime?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  clickCount  Int        @default(0)           // денормализовано, инкремент в транзакции клика
+  createdAt   DateTime   @default(now())
+  clicks      Click[]
+  dailyStats  DailyLinkStat[]
+
+  @@index([ownerId])
+  @@index([status, expiresAt])
+}
+
+enum LinkStatus {
+  ACTIVE
+  EXPIRED
+  DISABLED
+}
+
+model Click {
+  id         String   @id @default(uuid())
+  linkId     String
+  link       Link     @relation(fields: [linkId], references: [id])
+  occurredAt DateTime @default(now())
+  referrer   String?
+  userAgent  String?
+  ipHash     String?               // sha256(ip + соль из env), сырой ip не хранится
+  country    String?
+
+  @@index([linkId, occurredAt])
+}
+
+model DailyLinkStat {
+  linkId     String
+  link       Link     @relation(fields: [linkId], references: [id])
+  date       DateTime  // усечено до суток, UTC 00:00
+  clickCount Int      @default(0)
+
+  @@id([linkId, date])
+}
+
+model ApiKey {
+  id        String    @id @default(uuid())
+  keyHash   String    @unique   // хранится хеш, не сырой ключ
+  ownerId   String
+  owner     User      @relation(fields: [ownerId], references: [id])
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+}
