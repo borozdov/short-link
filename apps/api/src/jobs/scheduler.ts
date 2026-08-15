@@ -10,5 +10,5 @@ export function startScheduler(): void {
 
   schedule('0 * * * *', runExpireSweep);
 
-  schedule('10 0 * * *', runDailyRollup, { timezone: 'UTC' });
+  schedule('10 0 * * *', () => void runDailyRollup(), { timezone: 'UTC' });
 }
