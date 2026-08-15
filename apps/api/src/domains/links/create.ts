@@ -32,6 +32,7 @@ function sendLink(res: Response, link: Link): void {
       shortUrl: `${env.BASE_LINK_DOMAIN}/${link.uid}`,
       uid: link.uid,
       secretToken: link.secretToken,
+      qrUrl: `/api/links/${link.uid}/qr`,
     },
   });
 }
