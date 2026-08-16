@@ -1,7 +1,18 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../../db/client.js';
+import type { Link } from '../../generated/prisma/client.js';
 import { env } from '../../config/env.js';
 import { hashIp } from './ip-hash.js';
+
+// tech.md "UTM на редиректе": link's UTM fields override same-named query params already
+// present on targetUrl; everything else on targetUrl is left untouched.
+function applyUtmParams(targetUrl: string, link: Pick<Link, 'utmSource' | 'utmMedium' | 'utmCampaign'>): string {
+  const url = new URL(targetUrl);
+  if (link.utmSource) url.searchParams.set('utm_source', link.utmSource);
+  if (link.utmMedium) url.searchParams.set('utm_medium', link.utmMedium);
+  if (link.utmCampaign) url.searchParams.set('utm_campaign', link.utmCampaign);
+  return url.toString();
+}
 
 export async function redirectLink(req: Request<{ uid: string }>, res: Response): Promise<void> {
   const { uid } = req.params;
@@ -27,5 +38,5 @@ export async function redirectLink(req: Request<{ uid: string }>, res: Response)
     }),
   ]);
 
-  res.redirect(302, link.targetUrl);
+  res.redirect(302, applyUtmParams(link.targetUrl, link));
 }

@@ -67,4 +67,26 @@ describe('GET /:uid', () => {
     expect(response.headers.location).toBe(env.BASE_FALLBACK_URL);
     expect(await prisma.click.count({ where: { linkId: link.id } })).toBe(0);
   });
+
+  it('merges UTM params into the target URL, overriding existing ones and keeping others', async () => {
+    const link = await prisma.link.create({
+      data: {
+        uid: 'utmlnk',
+        targetUrl: 'https://example.com/target?utm_source=old&other=1',
+        secretToken: 'utm-secret-token',
+        utmSource: 'newsletter',
+        utmMedium: 'email',
+        utmCampaign: 'launch',
+      },
+    });
+
+    const response = await request(app).get(`/${link.uid}`);
+
+    expect(response.status).toBe(302);
+    const location = new URL(response.headers.location);
+    expect(location.searchParams.get('utm_source')).toBe('newsletter');
+    expect(location.searchParams.get('utm_medium')).toBe('email');
+    expect(location.searchParams.get('utm_campaign')).toBe('launch');
+    expect(location.searchParams.get('other')).toBe('1');
+  });
 });
