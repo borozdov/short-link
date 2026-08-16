@@ -12,6 +12,7 @@ import { useUserLinks } from './useUserLinks';
 import { useClaimLink } from './useClaimLink';
 import { useUnclaimLink } from './useUnclaimLink';
 import { ClaimLinkForm } from './ClaimLinkForm';
+import { ApiKeysSection } from './ApiKeysSection';
 import styles from './DashboardPage.module.css';
 
 const STATUS_VARIANT: Record<LinkStatus, 'default' | 'inverted'> = {
@@ -45,6 +46,7 @@ export function DashboardPage() {
         tabs={[
           { key: 'links', label: 'Links' },
           { key: 'claim', label: 'Claim link' },
+          { key: 'apiKeys', label: 'API keys' },
         ]}
         active={tab}
         onChange={setTab}
@@ -94,6 +96,12 @@ export function DashboardPage() {
       {tab === 'claim' && (
         <Card padding="lg">
           <ClaimLinkForm loading={claim.loading} onSubmit={claim.submit} />
+        </Card>
+      )}
+
+      {tab === 'apiKeys' && (
+        <Card padding="lg">
+          <ApiKeysSection />
         </Card>
       )}
 

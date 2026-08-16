@@ -1,4 +1,6 @@
 import type {
+  ApiKey,
+  ApiKeyGenerateResponse,
   ApiResponse,
   BulkTextRequest,
   BulkTextResponse,
@@ -187,6 +189,50 @@ export async function unclaimLink(id: string): Promise<Link> {
   });
 
   const body = (await response.json()) as ApiResponse<Link>;
+
+  if ('error' in body) {
+    throw new ApiError(body.error.code, body.error.message);
+  }
+
+  return body.data;
+}
+
+export async function generateApiKey(): Promise<ApiKeyGenerateResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/users/api-keys`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  const body = (await response.json()) as ApiResponse<ApiKeyGenerateResponse>;
+
+  if ('error' in body) {
+    throw new ApiError(body.error.code, body.error.message);
+  }
+
+  return body.data;
+}
+
+export async function getApiKeys(): Promise<ApiKey[]> {
+  const response = await fetch(`${API_BASE_URL}/api/users/api-keys`, {
+    credentials: 'include',
+  });
+
+  const body = (await response.json()) as ApiResponse<ApiKey[]>;
+
+  if ('error' in body) {
+    throw new ApiError(body.error.code, body.error.message);
+  }
+
+  return body.data;
+}
+
+export async function revokeApiKey(id: string): Promise<ApiKey> {
+  const response = await fetch(`${API_BASE_URL}/api/users/api-keys/${id}/revoke`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  const body = (await response.json()) as ApiResponse<ApiKey>;
 
   if ('error' in body) {
     throw new ApiError(body.error.code, body.error.message);
