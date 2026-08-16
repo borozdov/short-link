@@ -36,7 +36,7 @@ function sendLink(res: Response, link: Link): void {
 }
 
 // Fields shared by both the custom-slug and generated-uid create paths below.
-function baseLinkData(input: CreateLinkRequest) {
+function baseLinkData(input: CreateLinkRequest, ownerId: string | null) {
   const expiresAt = input.expiresInHours
     ? new Date(Date.now() + input.expiresInHours * 60 * 60 * 1000)
     : null;
@@ -45,6 +45,7 @@ function baseLinkData(input: CreateLinkRequest) {
     targetUrl: input.targetUrl,
     secretToken: generateSecretToken(),
     expiresAt,
+    ownerId,
     // Accepted and stored even though the Task 1 form has no UTM inputs yet (Task 7's job) —
     // keeps the frozen request contract genuinely implemented server-side.
     utmSource: input.utm?.source ?? null,
@@ -59,12 +60,13 @@ export async function createLink(req: Request, res: Response): Promise<void> {
     throwForValidationError(parsed.error);
   }
   const input = parsed.data;
+  const ownerId = req.user?.id ?? null;
 
   if (input.customSlug) {
     try {
       const link = await prisma.link.create({
         data: {
-          ...baseLinkData(input),
+          ...baseLinkData(input, ownerId),
           uid: input.customSlug,
           isCustomSlug: true,
         },
@@ -83,7 +85,7 @@ export async function createLink(req: Request, res: Response): Promise<void> {
     try {
       const link = await prisma.link.create({
         data: {
-          ...baseLinkData(input),
+          ...baseLinkData(input, ownerId),
           uid: generateUid(),
         },
       });

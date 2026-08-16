@@ -6,7 +6,7 @@ import { HttpError } from './http-error.js';
 import { createRateLimiter } from './rate-limit.js';
 
 const API_KEY_RATE_LIMIT_WINDOW_MS = 60_000;
-const API_KEY_RATE_LIMIT_MAX = 60;
+export const API_KEY_RATE_LIMIT_MAX = 60;
 
 // tech.md: 60 req/min per apiKey.id — keyed by the key, not the owner, so each key has its own budget.
 export const apiKeyRateLimiter = createRateLimiter({
