@@ -2,6 +2,11 @@ import { useTheme } from './useTheme';
 import styles from './ThemeToggle.module.css';
 
 // Icon shown is what the click will switch TO: dark theme showing sun, light theme showing moon.
+const THEME_LABEL_RU: Record<'obsidian' | 'titan', string> = {
+  obsidian: 'Обсидиан',
+  titan: 'Титан',
+};
+
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
   const switchingTo = theme === 'obsidian' ? 'titan' : 'obsidian';
@@ -11,7 +16,7 @@ export function ThemeToggle() {
       type="button"
       className={styles.toggle}
       onClick={toggleTheme}
-      aria-label={`Switch to ${switchingTo} theme`}
+      aria-label={`Переключить на тему «${THEME_LABEL_RU[switchingTo]}»`}
     >
       {theme === 'obsidian' ? <SunIcon className={styles.icon} /> : <MoonIcon className={styles.icon} />}
     </button>

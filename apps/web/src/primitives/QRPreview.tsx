@@ -6,7 +6,7 @@ export interface QRPreviewProps {
   alt?: string;
 }
 
-export function QRPreview({ svgUrl, pngUrl, alt = 'QR code' }: QRPreviewProps) {
+export function QRPreview({ svgUrl, pngUrl, alt = 'QR-код' }: QRPreviewProps) {
   return (
     <div className={styles.wrapper}>
       <img className={styles.image} src={svgUrl} alt={alt} width={160} height={160} />

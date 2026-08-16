@@ -22,7 +22,7 @@ export function Button({
       disabled={disabled || loading}
       {...rest}
     >
-      {loading ? 'LOADING…' : children}
+      {loading ? 'ЗАГРУЗКА…' : children}
     </button>
   );
 }

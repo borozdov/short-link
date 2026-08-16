@@ -6,7 +6,7 @@ export interface CopyButtonProps {
   label?: string;
 }
 
-export function CopyButton({ value, label = 'Copy' }: CopyButtonProps) {
+export function CopyButton({ value, label = 'Копировать' }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -22,7 +22,7 @@ export function CopyButton({ value, label = 'Copy' }: CopyButtonProps) {
   return (
     <button type="button" className={styles.button} onClick={handleCopy}>
       {copied ? <CheckIcon className={styles.icon} /> : <CopyIcon className={styles.icon} />}
-      {copied ? 'Copied' : label}
+      {copied ? 'Скопировано' : label}
     </button>
   );
 }
