@@ -4,6 +4,9 @@ import { listUserLinks } from './list-links.js';
 import { getUserLinkStats } from './link-stats.js';
 import { claimLink } from './claim.js';
 import { unclaimLink } from './unclaim.js';
+import { createApiKey } from './generate-api-key.js';
+import { listApiKeys } from './list-api-keys.js';
+import { revokeApiKey } from './revoke-api-key.js';
 
 export const usersRouter = Router();
 
@@ -13,3 +16,7 @@ usersRouter.get('/links', listUserLinks);
 usersRouter.get('/links/:id/stats', getUserLinkStats);
 usersRouter.post('/links/claim', claimLink);
 usersRouter.post('/links/:id/unclaim', unclaimLink);
+
+usersRouter.post('/api-keys', createApiKey);
+usersRouter.get('/api-keys', listApiKeys);
+usersRouter.post('/api-keys/:id/revoke', revokeApiKey);

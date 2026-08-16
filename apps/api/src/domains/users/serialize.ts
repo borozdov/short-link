@@ -1,5 +1,5 @@
-import type { Link as PrismaLink } from '../../generated/prisma/client.js';
-import type { Link } from '@short-link/shared';
+import type { ApiKey as PrismaApiKey, Link as PrismaLink } from '../../generated/prisma/client.js';
+import type { ApiKey, Link } from '@short-link/shared';
 
 export function toPublicLink(link: PrismaLink): Link {
   return {
@@ -15,5 +15,14 @@ export function toPublicLink(link: PrismaLink): Link {
     utmCampaign: link.utmCampaign,
     clickCount: link.clickCount,
     createdAt: link.createdAt.toISOString(),
+  };
+}
+
+export function toPublicApiKey(apiKey: PrismaApiKey): ApiKey {
+  return {
+    id: apiKey.id,
+    ownerId: apiKey.ownerId,
+    createdAt: apiKey.createdAt.toISOString(),
+    revokedAt: apiKey.revokedAt ? apiKey.revokedAt.toISOString() : null,
   };
 }
