@@ -6,7 +6,7 @@ export interface ClickChartProps {
 }
 
 function formatDay(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return new Date(iso).toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
 }
 
 // No chart library in the repo, and one bar-per-day chart doesn't warrant adding one —
@@ -14,7 +14,7 @@ function formatDay(iso: string): string {
 // (hairline track, solid inverted bars, no shadows/gradients).
 export function ClickChart({ dailyStats }: ClickChartProps) {
   if (dailyStats.length === 0) {
-    return <p className={styles.empty}>No daily data yet.</p>;
+    return <p className={styles.empty}>Пока нет данных по дням.</p>;
   }
 
   const max = Math.max(1, ...dailyStats.map((stat) => stat.clickCount));

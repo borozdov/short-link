@@ -14,7 +14,7 @@ import { useRevokeApiKey } from './useRevokeApiKey';
 import styles from './ApiKeysSection.module.css';
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString();
+  return new Date(iso).toLocaleDateString('ru-RU');
 }
 
 export function ApiKeysSection() {
@@ -35,12 +35,12 @@ export function ApiKeysSection() {
         onClick={() => void generate.submit()}
         className={styles.generateButton}
       >
-        Generate new key
+        Сгенерировать ключ
       </Button>
 
       {generate.generated && (
         <Card padding="md">
-          <p className={styles.note}>Copy this now — you won&apos;t see it again</p>
+          <p className={styles.note}>Скопируйте сейчас — повторно ключ не показывается</p>
           <div className={styles.row}>
             <Input readOnly monospace value={generate.generated.rawKey} />
             <CopyButton value={generate.generated.rawKey} />
@@ -49,19 +49,19 @@ export function ApiKeysSection() {
       )}
 
       {loading ? (
-        <p className={styles.message}>Loading…</p>
+        <p className={styles.message}>Загрузка…</p>
       ) : apiKeys.length === 0 ? (
-        <EmptyState message="No API keys yet. Generate one to use the public API." />
+        <EmptyState message="Пока нет API-ключей. Сгенерируйте ключ, чтобы пользоваться публичным API." />
       ) : (
         <Table<ApiKey>
           columns={[
-            { key: 'createdAt', header: 'Created', render: (key) => formatDate(key.createdAt) },
+            { key: 'createdAt', header: 'Создан', render: (key) => formatDate(key.createdAt) },
             {
               key: 'status',
-              header: 'Status',
+              header: 'Статус',
               render: (key) => (
                 <Badge variant={key.revokedAt ? 'default' : 'inverted'}>
-                  {key.revokedAt ? 'Revoked' : 'Active'}
+                  {key.revokedAt ? 'Отозван' : 'Активен'}
                 </Badge>
               ),
             },
@@ -71,7 +71,7 @@ export function ApiKeysSection() {
               render: (key) =>
                 key.revokedAt ? null : (
                   <Button size="sm" onClick={() => setPendingRevoke(key)}>
-                    Revoke
+                    Отозвать
                   </Button>
                 ),
             },
@@ -81,15 +81,15 @@ export function ApiKeysSection() {
       )}
 
       <Modal open={pendingRevoke !== null} onClose={() => setPendingRevoke(null)}>
-        <p className={styles.confirmText}>Revoke this API key? Any script using it will stop working immediately.</p>
+        <p className={styles.confirmText}>Отозвать этот API-ключ? Любой скрипт, использующий его, сразу перестанет работать.</p>
         <div className={styles.confirmActions}>
-          <Button onClick={() => setPendingRevoke(null)}>Cancel</Button>
+          <Button onClick={() => setPendingRevoke(null)}>Отмена</Button>
           <Button
             variant="inverted"
             loading={revoke.loading}
             onClick={() => pendingRevoke && void revoke.submit(pendingRevoke.id)}
           >
-            Revoke
+            Отозвать
           </Button>
         </div>
       </Modal>

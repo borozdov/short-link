@@ -10,10 +10,10 @@ export function useRevokeApiKey(onRevoked: () => void) {
     setLoading(true);
     try {
       await revokeApiKey(id);
-      showToast('API key revoked');
+      showToast('API-ключ отозван');
       onRevoked();
     } catch (error) {
-      showToast(error instanceof ApiError ? error.message : 'Something went wrong');
+      showToast(error instanceof ApiError ? error.message : 'Что-то пошло не так');
     } finally {
       setLoading(false);
     }

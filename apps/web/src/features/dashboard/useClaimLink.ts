@@ -11,10 +11,10 @@ export function useClaimLink(onClaimed: () => void) {
     setLoading(true);
     try {
       await claimLink(payload);
-      showToast('Link claimed');
+      showToast('Ссылка забрана');
       onClaimed();
     } catch (error) {
-      showToast(error instanceof ApiError ? error.message : 'Something went wrong');
+      showToast(error instanceof ApiError ? error.message : 'Что-то пошло не так');
     } finally {
       setLoading(false);
     }

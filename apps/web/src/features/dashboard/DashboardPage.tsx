@@ -21,8 +21,14 @@ const STATUS_VARIANT: Record<LinkStatus, 'default' | 'inverted'> = {
   DISABLED: 'default',
 };
 
+const STATUS_LABEL: Record<LinkStatus, string> = {
+  ACTIVE: 'Активна',
+  EXPIRED: 'Истекла',
+  DISABLED: 'Отключена',
+};
+
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString();
+  return new Date(iso).toLocaleDateString('ru-RU');
 }
 
 export function DashboardPage() {
@@ -44,9 +50,9 @@ export function DashboardPage() {
     <div className={styles.page}>
       <Tabs
         tabs={[
-          { key: 'links', label: 'Links' },
-          { key: 'claim', label: 'Claim link' },
-          { key: 'apiKeys', label: 'API keys' },
+          { key: 'links', label: 'Ссылки' },
+          { key: 'claim', label: 'Забрать ссылку' },
+          { key: 'apiKeys', label: 'API-ключи' },
         ]}
         active={tab}
         onChange={setTab}
@@ -55,15 +61,15 @@ export function DashboardPage() {
       {tab === 'links' && (
         <Card padding="lg">
           {loading ? (
-            <p className={styles.message}>Loading…</p>
+            <p className={styles.message}>Загрузка…</p>
           ) : links.length === 0 ? (
-            <EmptyState message="No links yet. Create one, or claim an anonymous link by its secret token." />
+            <EmptyState message="Пока нет ссылок. Создайте новую или заберите анонимную ссылку по её секретному токену." />
           ) : (
             <Table<Link>
               columns={[
                 {
                   key: 'uid',
-                  header: 'Link',
+                  header: 'Ссылка',
                   render: (link) => (
                     <RouterLink className={styles.linkCell} to={`/dashboard/links/${link.id}`}>
                       /{link.uid}
@@ -72,17 +78,17 @@ export function DashboardPage() {
                 },
                 {
                   key: 'status',
-                  header: 'Status',
-                  render: (link) => <Badge variant={STATUS_VARIANT[link.status]}>{link.status}</Badge>,
+                  header: 'Статус',
+                  render: (link) => <Badge variant={STATUS_VARIANT[link.status]}>{STATUS_LABEL[link.status]}</Badge>,
                 },
-                { key: 'clickCount', header: 'Clicks', numeric: true, render: (link) => link.clickCount },
-                { key: 'createdAt', header: 'Created', render: (link) => formatDate(link.createdAt) },
+                { key: 'clickCount', header: 'Клики', numeric: true, render: (link) => link.clickCount },
+                { key: 'createdAt', header: 'Создана', render: (link) => formatDate(link.createdAt) },
                 {
                   key: 'actions',
                   header: '',
                   render: (link) => (
                     <Button size="sm" onClick={() => setPendingUnclaim(link)}>
-                      Remove
+                      Убрать
                     </Button>
                   ),
                 },
@@ -107,17 +113,17 @@ export function DashboardPage() {
 
       <Modal open={pendingUnclaim !== null} onClose={() => setPendingUnclaim(null)}>
         <p className={styles.confirmText}>
-          Remove <strong>/{pendingUnclaim?.uid}</strong> from your dashboard? The link keeps working — you just
-          won&apos;t manage it here anymore. You can claim it again later with its secret token.
+          Убрать <strong>/{pendingUnclaim?.uid}</strong> из личного кабинета? Ссылка продолжит работать — вы просто
+          больше не будете управлять ей здесь. Позже её можно забрать снова по секретному токену.
         </p>
         <div className={styles.confirmActions}>
-          <Button onClick={() => setPendingUnclaim(null)}>Cancel</Button>
+          <Button onClick={() => setPendingUnclaim(null)}>Отмена</Button>
           <Button
             variant="inverted"
             loading={unclaim.loading}
             onClick={() => pendingUnclaim && unclaim.submit(pendingUnclaim.id)}
           >
-            Remove
+            Убрать
           </Button>
         </div>
       </Modal>

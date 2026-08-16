@@ -18,7 +18,7 @@ export function ClaimLinkForm({ loading, onSubmit }: ClaimLinkFormProps) {
 
     const parsed = ClaimLinkRequestSchema.safeParse({ secretToken });
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'Enter a secret token');
+      setError(parsed.error.issues[0]?.message ?? 'Введите секретный токен');
       return;
     }
 
@@ -30,15 +30,15 @@ export function ClaimLinkForm({ loading, onSubmit }: ClaimLinkFormProps) {
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
       <Input
-        label="Secret token"
-        placeholder="Paste the link's secret token"
+        label="Секретный токен"
+        placeholder="Вставьте секретный токен ссылки"
         monospace
         value={secretToken}
         onChange={(event) => setSecretToken(event.target.value)}
         error={error}
       />
       <Button type="submit" variant="inverted" loading={loading} className={styles.submit}>
-        Claim link
+        Забрать ссылку
       </Button>
     </form>
   );

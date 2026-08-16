@@ -10,10 +10,10 @@ export function useUnclaimLink(onUnclaimed: () => void) {
     setLoading(true);
     try {
       await unclaimLink(id);
-      showToast('Link removed from your dashboard');
+      showToast('Ссылка убрана из личного кабинета');
       onUnclaimed();
     } catch (error) {
-      showToast(error instanceof ApiError ? error.message : 'Something went wrong');
+      showToast(error instanceof ApiError ? error.message : 'Что-то пошло не так');
     } finally {
       setLoading(false);
     }
