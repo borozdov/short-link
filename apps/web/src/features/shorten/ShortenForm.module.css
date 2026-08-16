@@ -4,6 +4,15 @@
   gap: 16px;
 }
 
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--slate);
+  margin: 0;
+}
+
 .submit {
   align-self: flex-start;
 }

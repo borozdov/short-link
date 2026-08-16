@@ -28,15 +28,28 @@ export function ShortenForm({ loading, onSubmit }: ShortenFormProps) {
   const [targetUrl, setTargetUrl] = useState('');
   const [customSlug, setCustomSlug] = useState('');
   const [expiresValue, setExpiresValue] = useState('');
+  const [utmSource, setUtmSource] = useState('');
+  const [utmMedium, setUtmMedium] = useState('');
+  const [utmCampaign, setUtmCampaign] = useState('');
   const [errors, setErrors] = useState<FieldErrors>({});
 
   function handleSubmit(event: FormEvent): void {
     event.preventDefault();
 
+    const utm =
+      utmSource.trim() || utmMedium.trim() || utmCampaign.trim()
+        ? {
+            source: utmSource.trim() || undefined,
+            medium: utmMedium.trim() || undefined,
+            campaign: utmCampaign.trim() || undefined,
+          }
+        : undefined;
+
     const payload = {
       targetUrl,
       customSlug: customSlug.trim() || undefined,
       expiresInHours: expiresValue ? Number(expiresValue) : undefined,
+      utm,
     };
 
     const parsed = CreateLinkRequestSchema.safeParse(payload);
@@ -71,6 +84,25 @@ export function ShortenForm({ loading, onSubmit }: ShortenFormProps) {
         error={errors.customSlug}
       />
       <Select label="Expires" value={expiresValue} onChange={setExpiresValue} options={EXPIRY_OPTIONS} />
+      <p className={styles.sectionLabel}>UTM tags (optional)</p>
+      <Input
+        label="Source"
+        placeholder="newsletter"
+        value={utmSource}
+        onChange={(event) => setUtmSource(event.target.value)}
+      />
+      <Input
+        label="Medium"
+        placeholder="email"
+        value={utmMedium}
+        onChange={(event) => setUtmMedium(event.target.value)}
+      />
+      <Input
+        label="Campaign"
+        placeholder="launch"
+        value={utmCampaign}
+        onChange={(event) => setUtmCampaign(event.target.value)}
+      />
       <Button type="submit" variant="inverted" loading={loading} className={styles.submit}>
         Shorten
       </Button>
