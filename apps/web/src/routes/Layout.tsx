@@ -15,6 +15,9 @@ export function Layout() {
           <Link className={styles.navLink} to="/bulk-text">
             Bulk text
           </Link>
+          <Link className={styles.navLink} to="/bookmarklet">
+            Bookmarklet
+          </Link>
           {!loading &&
             (user ? (
               <>
