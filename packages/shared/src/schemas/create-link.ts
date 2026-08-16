@@ -18,8 +18,8 @@ export const CreateLinkRequestSchema = z.object({
   targetUrl: z.string().url(),
   customSlug: z
     .string()
-    .regex(slugPattern, 'Use 3-32 characters: letters, numbers, _ or -')
-    .refine((slug) => !FORBIDDEN_SLUGS.includes(slug.toLowerCase()), 'This slug is reserved')
+    .regex(slugPattern, 'От 3 до 32 символов: латинские буквы, цифры, _ или -')
+    .refine((slug) => !FORBIDDEN_SLUGS.includes(slug.toLowerCase()), 'Этот слаг зарезервирован')
     .optional(),
   expiresInHours: z.number().int().positive().optional(),
   utm: z
