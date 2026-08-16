@@ -14,7 +14,7 @@ export function ShortenResult({ result }: ShortenResultProps) {
   return (
     <div className={styles.result}>
       <div>
-        <p className={styles.note}>Short link</p>
+        <p className={styles.note}>Короткая ссылка</p>
         <div className={styles.row}>
           <Input readOnly monospace value={result.shortUrl} />
           <CopyButton value={result.shortUrl} />
@@ -24,7 +24,7 @@ export function ShortenResult({ result }: ShortenResultProps) {
       <QRPreview svgUrl={result.qrUrl} pngUrl={`${result.qrUrl}?format=png`} alt={`QR code for ${result.shortUrl}`} />
 
       <div>
-        <p className={styles.note}>Stats link — keep it secret</p>
+        <p className={styles.note}>Ссылка на статистику — держите в секрете</p>
         <div className={styles.row}>
           <Input readOnly monospace value={statsUrl} />
           <CopyButton value={statsUrl} />

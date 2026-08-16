@@ -14,7 +14,7 @@ export function useCreateLink() {
       const response = await createLink(payload);
       setResult(response);
     } catch (error) {
-      showToast(error instanceof ApiError ? error.message : 'Something went wrong');
+      showToast(error instanceof ApiError ? error.message : 'Что-то пошло не так');
     } finally {
       setLoading(false);
     }

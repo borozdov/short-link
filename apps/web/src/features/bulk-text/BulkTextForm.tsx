@@ -18,7 +18,7 @@ export function BulkTextForm({ loading, onSubmit }: BulkTextFormProps) {
 
     const parsed = BulkTextRequestSchema.safeParse({ text });
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'Invalid text');
+      setError(parsed.error.issues[0]?.message ?? 'Некорректный текст');
       return;
     }
 
@@ -29,15 +29,15 @@ export function BulkTextForm({ loading, onSubmit }: BulkTextFormProps) {
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
       <Textarea
-        label="Text"
-        placeholder="Paste text with links to shorten…"
+        label="Текст"
+        placeholder="Вставьте текст со ссылками для сокращения…"
         rows={12}
         value={text}
         onChange={(event) => setText(event.target.value)}
         error={error}
       />
       <Button type="submit" variant="inverted" loading={loading} className={styles.submit}>
-        Shorten links
+        Сократить ссылки
       </Button>
     </form>
   );

@@ -12,7 +12,7 @@ export function BulkTextResult({ result }: BulkTextResultProps) {
   return (
     <div className={styles.result}>
       <div>
-        <p className={styles.note}>Rewritten text</p>
+        <p className={styles.note}>Изменённый текст</p>
         <div className={styles.row}>
           <Textarea readOnly monospace rows={12} value={result.text} />
           <CopyButton value={result.text} />
@@ -20,9 +20,9 @@ export function BulkTextResult({ result }: BulkTextResultProps) {
       </div>
 
       <div>
-        <p className={styles.note}>Created links</p>
+        <p className={styles.note}>Созданные ссылки</p>
         {result.created.length === 0 ? (
-          <EmptyState message="No links found in this text" />
+          <EmptyState message="В этом тексте не найдено ссылок" />
         ) : (
           <ul className={styles.list}>
             {result.created.map((item) => (

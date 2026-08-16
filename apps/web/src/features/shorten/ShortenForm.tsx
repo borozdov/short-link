@@ -7,11 +7,11 @@ import { Button } from '../../primitives/Button';
 import styles from './ShortenForm.module.css';
 
 const EXPIRY_OPTIONS = [
-  { label: 'Never', value: '' },
-  { label: '1 hour', value: '1' },
-  { label: '24 hours', value: '24' },
-  { label: '7 days', value: '168' },
-  { label: '30 days', value: '720' },
+  { label: 'Бессрочно', value: '' },
+  { label: '1 час', value: '1' },
+  { label: '24 часа', value: '24' },
+  { label: '7 дней', value: '168' },
+  { label: '30 дней', value: '720' },
 ];
 
 interface FieldErrors {
@@ -56,7 +56,7 @@ export function ShortenForm({ loading, onSubmit }: ShortenFormProps) {
     if (!parsed.success) {
       const nextErrors: FieldErrors = {};
       for (const issue of parsed.error.issues) {
-        if (issue.path[0] === 'targetUrl') nextErrors.targetUrl = 'Enter a valid URL';
+        if (issue.path[0] === 'targetUrl') nextErrors.targetUrl = 'Введите корректный URL';
         if (issue.path[0] === 'customSlug') nextErrors.customSlug = issue.message;
       }
       setErrors(nextErrors);
@@ -70,41 +70,41 @@ export function ShortenForm({ loading, onSubmit }: ShortenFormProps) {
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
       <Textarea
-        label="Target URL"
+        label="Целевой URL"
         placeholder="https://example.com/very/long/path"
         value={targetUrl}
         onChange={(event) => setTargetUrl(event.target.value)}
         error={errors.targetUrl}
       />
       <Input
-        label="Custom slug (optional)"
+        label="Свой слаг (необязательно)"
         placeholder="my-link"
         value={customSlug}
         onChange={(event) => setCustomSlug(event.target.value)}
         error={errors.customSlug}
       />
-      <Select label="Expires" value={expiresValue} onChange={setExpiresValue} options={EXPIRY_OPTIONS} />
-      <p className={styles.sectionLabel}>UTM tags (optional)</p>
+      <Select label="Срок действия" value={expiresValue} onChange={setExpiresValue} options={EXPIRY_OPTIONS} />
+      <p className={styles.sectionLabel}>UTM-метки (необязательно)</p>
       <Input
-        label="Source"
+        label="Источник"
         placeholder="newsletter"
         value={utmSource}
         onChange={(event) => setUtmSource(event.target.value)}
       />
       <Input
-        label="Medium"
+        label="Канал"
         placeholder="email"
         value={utmMedium}
         onChange={(event) => setUtmMedium(event.target.value)}
       />
       <Input
-        label="Campaign"
+        label="Кампания"
         placeholder="launch"
         value={utmCampaign}
         onChange={(event) => setUtmCampaign(event.target.value)}
       />
       <Button type="submit" variant="inverted" loading={loading} className={styles.submit}>
-        Shorten
+        Сократить
       </Button>
     </form>
   );
