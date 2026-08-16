@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { ShortenPage } from './ShortenPage';
 import { StatsPage } from './StatsPage';
+import { BulkTextPage } from './BulkTextPage';
 import { LoginPage } from './LoginPage';
 import { RegisterPage } from './RegisterPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
@@ -14,6 +15,7 @@ export interface RouteConfig {
 
 export const routesConfig: RouteConfig[] = [
   { path: '/', element: <ShortenPage /> },
+  { path: '/bulk-text', element: <BulkTextPage /> },
   { path: '/s/:secretToken', element: <StatsPage /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },

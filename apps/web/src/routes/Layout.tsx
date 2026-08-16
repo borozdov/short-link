@@ -12,6 +12,9 @@ export function Layout() {
       <header className={styles.header}>
         <p className={styles.wordmark}>Borozdov Link</p>
         <div className={styles.actions}>
+          <Link className={styles.navLink} to="/bulk-text">
+            Bulk text
+          </Link>
           {!loading &&
             (user ? (
               <>

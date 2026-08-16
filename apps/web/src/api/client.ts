@@ -1,5 +1,7 @@
 import type {
   ApiResponse,
+  BulkTextRequest,
+  BulkTextResponse,
   ClaimLinkRequest,
   Click,
   CreateLinkRequest,
@@ -30,6 +32,22 @@ export async function createLink(payload: CreateLinkRequest): Promise<CreateLink
   });
 
   const body = (await response.json()) as ApiResponse<CreateLinkResponse>;
+
+  if ('error' in body) {
+    throw new ApiError(body.error.code, body.error.message);
+  }
+
+  return body.data;
+}
+
+export async function shortenBulkText(payload: BulkTextRequest): Promise<BulkTextResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/links/bulk-text`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const body = (await response.json()) as ApiResponse<BulkTextResponse>;
 
   if ('error' in body) {
     throw new ApiError(body.error.code, body.error.message);
