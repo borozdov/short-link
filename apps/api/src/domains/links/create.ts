@@ -5,9 +5,7 @@ import { prisma } from '../../db/client.js';
 import { Prisma, type Link } from '../../generated/prisma/client.js';
 import { env } from '../../config/env.js';
 import { HttpError } from '../../middleware/http-error.js';
-import { generateSecretToken, generateUid } from './uid.js';
-
-const MAX_UID_ATTEMPTS = 5;
+import { generateSecretToken, generateUid, MAX_UID_ATTEMPTS } from './uid.js';
 
 function isUniqueConstraintViolation(error: unknown): boolean {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
