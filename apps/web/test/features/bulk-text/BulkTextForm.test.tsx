@@ -21,8 +21,8 @@ describe('BulkTextPage', () => {
       </ToastProvider>,
     );
 
-    await user.type(screen.getByLabelText(/text/i), 'Check https://example.com/a out');
-    await user.click(screen.getByRole('button', { name: /shorten links/i }));
+    await user.type(screen.getByLabelText(/текст/i), 'Check https://example.com/a out');
+    await user.click(screen.getByRole('button', { name: /сократить ссылки/i }));
 
     expect(await screen.findByDisplayValue(/http:\/\/localhost:4000\/abc1234/)).toBeInTheDocument();
     expect(screen.getByText('https://example.com/a')).toBeInTheDocument();
@@ -36,9 +36,9 @@ describe('BulkTextPage', () => {
       </ToastProvider>,
     );
 
-    await user.click(screen.getByRole('button', { name: /shorten links/i }));
+    await user.click(screen.getByRole('button', { name: /сократить ссылки/i }));
 
-    expect(await screen.findByText(/text is required/i)).toBeInTheDocument();
+    expect(await screen.findByText(/введите текст/i)).toBeInTheDocument();
     expect(screen.queryByDisplayValue(/http:\/\/localhost:4000\/abc1234/)).not.toBeInTheDocument();
   });
 });

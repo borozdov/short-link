@@ -78,11 +78,11 @@ describe('DashboardPage — API keys', () => {
     const user = userEvent.setup();
     renderDashboard();
 
-    await user.click(await screen.findByRole('tab', { name: /api keys/i }));
+    await user.click(await screen.findByRole('tab', { name: /api-ключи/i }));
 
-    expect(await screen.findByText('Active')).toBeInTheDocument();
+    expect(await screen.findByText('Активен')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /generate new key/i }));
+    await user.click(screen.getByRole('button', { name: /сгенерировать ключ/i }));
 
     expect(await screen.findByDisplayValue('raw-key-value')).toBeInTheDocument();
   });
@@ -91,12 +91,12 @@ describe('DashboardPage — API keys', () => {
     const user = userEvent.setup();
     renderDashboard();
 
-    await user.click(await screen.findByRole('tab', { name: /api keys/i }));
-    await user.click(await screen.findByRole('button', { name: /revoke/i }));
+    await user.click(await screen.findByRole('tab', { name: /api-ключи/i }));
+    await user.click(await screen.findByRole('button', { name: /отозвать/i }));
 
     const dialog = await screen.findByRole('dialog');
-    await user.click(within(dialog).getByRole('button', { name: /revoke/i }));
+    await user.click(within(dialog).getByRole('button', { name: /отозвать/i }));
 
-    expect(await screen.findByText('API key revoked')).toBeInTheDocument();
+    expect(await screen.findByText('API-ключ отозван')).toBeInTheDocument();
   });
 });

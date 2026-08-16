@@ -20,7 +20,7 @@ vi.mock('../../../src/api/client', () => {
     getCurrentUser: vi.fn().mockRejectedValue(new Error('unauthenticated')),
     register: vi.fn((payload: { email: string; password: string }) => {
       if (payload.email === 'taken@example.com') {
-        return Promise.reject(new ApiError('EMAIL_TAKEN', 'This email is already registered'));
+        return Promise.reject(new ApiError('EMAIL_TAKEN', 'Этот email уже зарегистрирован'));
       }
       return Promise.resolve({
         id: 'user-1',
@@ -56,8 +56,8 @@ describe('RegisterPage', () => {
     renderRegisterPage();
 
     await user.type(screen.getByLabelText(/email/i), 'new@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'longenough');
-    await user.click(screen.getByRole('button', { name: /create account/i }));
+    await user.type(screen.getByLabelText(/пароль/i), 'longenough');
+    await user.click(screen.getByRole('button', { name: /зарегистрироваться/i }));
 
     expect(await screen.findByText('Home')).toBeInTheDocument();
   });
@@ -67,9 +67,9 @@ describe('RegisterPage', () => {
     renderRegisterPage();
 
     await user.type(screen.getByLabelText(/email/i), 'taken@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'longenough');
-    await user.click(screen.getByRole('button', { name: /create account/i }));
+    await user.type(screen.getByLabelText(/пароль/i), 'longenough');
+    await user.click(screen.getByRole('button', { name: /зарегистрироваться/i }));
 
-    expect(await screen.findByText('This email is already registered')).toBeInTheDocument();
+    expect(await screen.findByText('Этот email уже зарегистрирован')).toBeInTheDocument();
   });
 });

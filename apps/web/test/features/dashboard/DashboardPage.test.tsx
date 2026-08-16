@@ -49,7 +49,7 @@ vi.mock('../../../src/api/client', () => {
     getUserLinks: vi.fn().mockResolvedValue([OWNED_LINK]),
     claimLink: vi.fn((payload: { secretToken: string }) => {
       if (payload.secretToken !== 'valid-token') {
-        return Promise.reject(new ApiError('NOT_FOUND', 'Not found'));
+        return Promise.reject(new ApiError('NOT_FOUND', 'Не найдено'));
       }
       return Promise.resolve({ ...OWNED_LINK, id: 'link-2', uid: 'claimed1' });
     }),
@@ -92,11 +92,11 @@ describe('DashboardPage', () => {
     renderDashboard();
 
     await screen.findByText('/mylink1');
-    await user.click(screen.getByRole('tab', { name: /claim link/i }));
-    await user.type(screen.getByLabelText(/secret token/i), 'valid-token');
-    await user.click(screen.getByRole('button', { name: /claim link/i }));
+    await user.click(screen.getByRole('tab', { name: /забрать ссылку/i }));
+    await user.type(screen.getByLabelText(/секретный токен/i), 'valid-token');
+    await user.click(screen.getByRole('button', { name: /забрать ссылку/i }));
 
-    expect(await screen.findByText('Link claimed')).toBeInTheDocument();
+    expect(await screen.findByText('Ссылка забрана')).toBeInTheDocument();
   });
 
   it('shows an error toast for an unknown secret token', async () => {
@@ -104,10 +104,10 @@ describe('DashboardPage', () => {
     renderDashboard();
 
     await screen.findByText('/mylink1');
-    await user.click(screen.getByRole('tab', { name: /claim link/i }));
-    await user.type(screen.getByLabelText(/secret token/i), 'bad-token');
-    await user.click(screen.getByRole('button', { name: /claim link/i }));
+    await user.click(screen.getByRole('tab', { name: /забрать ссылку/i }));
+    await user.type(screen.getByLabelText(/секретный токен/i), 'bad-token');
+    await user.click(screen.getByRole('button', { name: /забрать ссылку/i }));
 
-    expect(await screen.findByText('Not found')).toBeInTheDocument();
+    expect(await screen.findByText('Не найдено')).toBeInTheDocument();
   });
 });

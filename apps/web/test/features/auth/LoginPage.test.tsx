@@ -21,7 +21,7 @@ vi.mock('../../../src/api/client', () => {
     register: vi.fn(),
     login: vi.fn((payload: { email: string; password: string }) => {
       if (payload.password !== 'correct-password') {
-        return Promise.reject(new ApiError('INVALID_CREDENTIALS', 'Invalid email or password'));
+        return Promise.reject(new ApiError('INVALID_CREDENTIALS', 'Неверный email или пароль'));
       }
       return Promise.resolve({
         id: 'user-1',
@@ -56,8 +56,8 @@ describe('LoginPage', () => {
     renderLoginPage();
 
     await user.type(screen.getByLabelText(/email/i), 'user@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'correct-password');
-    await user.click(screen.getByRole('button', { name: /log in/i }));
+    await user.type(screen.getByLabelText(/пароль/i), 'correct-password');
+    await user.click(screen.getByRole('button', { name: /войти/i }));
 
     expect(await screen.findByText('Home')).toBeInTheDocument();
   });
@@ -67,9 +67,9 @@ describe('LoginPage', () => {
     renderLoginPage();
 
     await user.type(screen.getByLabelText(/email/i), 'user@example.com');
-    await user.type(screen.getByLabelText(/password/i), 'wrong-password');
-    await user.click(screen.getByRole('button', { name: /log in/i }));
+    await user.type(screen.getByLabelText(/пароль/i), 'wrong-password');
+    await user.click(screen.getByRole('button', { name: /войти/i }));
 
-    expect(await screen.findByText('Invalid email or password')).toBeInTheDocument();
+    expect(await screen.findByText('Неверный email или пароль')).toBeInTheDocument();
   });
 });

@@ -36,8 +36,8 @@ describe('BookmarkletPage', () => {
   it('shows install instructions and the bookmarklet code with no url param', () => {
     renderBookmarklet('/bookmarklet');
 
-    expect(screen.getByText(/drag this link to your bookmarks bar/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /shorten this page/i })).toBeInTheDocument();
+    expect(screen.getByText(/перетащите эту ссылку на панель закладок/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /сократить эту страницу/i })).toBeInTheDocument();
     expect(screen.getByDisplayValue(/javascript:/)).toBeInTheDocument();
   });
 

@@ -34,7 +34,7 @@ describe('StatsPage', () => {
     );
 
     expect(await screen.findByText('3')).toBeInTheDocument();
-    expect(screen.getByText('ACTIVE')).toBeInTheDocument();
+    expect(screen.getByText('Активна')).toBeInTheDocument();
     expect(screen.getByText('https://twitter.com')).toBeInTheDocument();
   });
 });

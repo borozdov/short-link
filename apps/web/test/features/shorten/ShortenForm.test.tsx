@@ -24,8 +24,8 @@ describe('ShortenPage', () => {
       </ToastProvider>,
     );
 
-    await user.type(screen.getByLabelText(/target url/i), 'https://example.com');
-    await user.click(screen.getByRole('button', { name: /shorten/i }));
+    await user.type(screen.getByLabelText(/целевой url/i), 'https://example.com');
+    await user.click(screen.getByRole('button', { name: /сократить/i }));
 
     expect(await screen.findByDisplayValue('http://localhost:4000/abc1234')).toBeInTheDocument();
   });
@@ -38,11 +38,11 @@ describe('ShortenPage', () => {
       </ToastProvider>,
     );
 
-    await user.type(screen.getByLabelText(/target url/i), 'https://example.com');
-    await user.type(screen.getByLabelText(/source/i), 'newsletter');
-    await user.type(screen.getByLabelText(/medium/i), 'email');
-    await user.type(screen.getByLabelText(/campaign/i), 'launch');
-    await user.click(screen.getByRole('button', { name: /shorten/i }));
+    await user.type(screen.getByLabelText(/целевой url/i), 'https://example.com');
+    await user.type(screen.getByLabelText(/источник/i), 'newsletter');
+    await user.type(screen.getByLabelText(/канал/i), 'email');
+    await user.type(screen.getByLabelText(/кампания/i), 'launch');
+    await user.click(screen.getByRole('button', { name: /сократить/i }));
 
     await screen.findByDisplayValue('http://localhost:4000/abc1234');
 
