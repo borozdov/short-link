@@ -13,28 +13,28 @@ export function Layout() {
         <p className={styles.wordmark}>Borozdov Link</p>
         <div className={styles.actions}>
           <Link className={styles.navLink} to="/bulk-text">
-            Bulk text
+            Массовое сокращение
           </Link>
           <Link className={styles.navLink} to="/bookmarklet">
-            Bookmarklet
+            Букмарклет
           </Link>
           {!loading &&
             (user ? (
               <>
                 <Link className={styles.navLink} to="/dashboard">
-                  Dashboard
+                  Личный кабинет
                 </Link>
                 <Button size="sm" onClick={logout}>
-                  Log out
+                  Выйти
                 </Button>
               </>
             ) : (
               <>
                 <Link className={styles.navLink} to="/login">
-                  Log in
+                  Войти
                 </Link>
                 <Link className={styles.navLink} to="/register">
-                  Register
+                  Регистрация
                 </Link>
               </>
             ))}

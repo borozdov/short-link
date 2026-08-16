@@ -28,7 +28,7 @@ export function BookmarkletPage() {
     return (
       <div className={styles.page}>
         <Card padding="lg">
-          {loading && <p className={styles.message}>Shortening…</p>}
+          {loading && <p className={styles.message}>Сокращаем…</p>}
           {result && <ShortenResult result={result} />}
         </Card>
       </div>
@@ -40,14 +40,14 @@ export function BookmarkletPage() {
   return (
     <div className={styles.page}>
       <Card padding="lg">
-        <h1 className={styles.title}>Bookmarklet</h1>
+        <h1 className={styles.title}>Букмарклет</h1>
         <p className={styles.description}>
-          Drag this link to your bookmarks bar. Click it on any page to shorten that page&apos;s URL.
+          Перетащите эту ссылку на панель закладок. Кликните по ней на любой странице, чтобы сократить её URL.
         </p>
         <a href={bookmarkletCode} className={styles.bookmarklet} onClick={(event) => event.preventDefault()}>
-          Shorten this page
+          Сократить эту страницу
         </a>
-        <p className={styles.note}>Or copy the code and create the bookmark manually</p>
+        <p className={styles.note}>Или скопируйте код и создайте закладку вручную</p>
         <div className={styles.row}>
           <Input readOnly monospace value={bookmarkletCode} />
           <CopyButton value={bookmarkletCode} />
