@@ -30,7 +30,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     user = await prisma.user.create({ data: { email, passwordHash } });
   } catch (error) {
     if (isUniqueConstraintViolation(error)) {
-      throw new HttpError(409, 'EMAIL_TAKEN', 'This email is already registered');
+      throw new HttpError(409, 'EMAIL_TAKEN', 'Этот email уже зарегистрирован');
     }
     throw error;
   }
@@ -39,8 +39,8 @@ export async function register(req: Request, res: Response): Promise<void> {
   // itself, not a real verify flow (login isn't gated on it in the MVP).
   await emailSender.send(
     user.email,
-    'Confirm your email',
-    'Welcome to BOROZDOV LINK. Email verification is not required to use your account yet.',
+    'Подтвердите email',
+    'Добро пожаловать в BOROZDOV LINK. Подтверждение email пока не требуется для использования аккаунта.',
   );
 
   setAuthCookies(res, user.id, user.role);

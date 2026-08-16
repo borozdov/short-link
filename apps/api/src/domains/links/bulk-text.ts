@@ -19,24 +19,24 @@ async function createLinkWithRetry(tx: Prisma.TransactionClient, targetUrl: stri
       });
     } catch (error) {
       if (!isUniqueConstraintViolation(error) || attempt === MAX_UID_ATTEMPTS - 1) {
-        throw new HttpError(500, 'UID_EXHAUSTED', 'Could not generate a unique link id');
+        throw new HttpError(500, 'UID_EXHAUSTED', 'Не удалось сгенерировать уникальный идентификатор ссылки');
       }
     }
   }
   // Unreachable — the loop above always either returns or throws.
-  throw new HttpError(500, 'UID_EXHAUSTED', 'Could not generate a unique link id');
+  throw new HttpError(500, 'UID_EXHAUSTED', 'Не удалось сгенерировать уникальный идентификатор ссылки');
 }
 
 export async function shortenBulkText(req: Request, res: Response): Promise<void> {
   const parsed = BulkTextRequestSchema.safeParse(req.body);
   if (!parsed.success) {
-    throw new HttpError(400, 'INVALID_TEXT', parsed.error.issues[0]?.message ?? 'Invalid request');
+    throw new HttpError(400, 'INVALID_TEXT', parsed.error.issues[0]?.message ?? 'Некорректный запрос');
   }
   const { text } = parsed.data;
 
   const matches = extractUrls(text);
   if (matches.length > BULK_TEXT_MAX_LINKS) {
-    throw new HttpError(400, 'TOO_MANY_LINKS', `Text contains more than ${BULK_TEXT_MAX_LINKS} links`);
+    throw new HttpError(400, 'TOO_MANY_LINKS', `Текст содержит больше ${BULK_TEXT_MAX_LINKS} ссылок`);
   }
 
   const externalMatches = matches.filter((match) => !isOwnDomainUrl(match.url, env.BASE_LINK_DOMAIN));

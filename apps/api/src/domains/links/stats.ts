@@ -6,7 +6,7 @@ import { HttpError } from '../../middleware/http-error.js';
 export async function getLinkStats(req: Request<{ secretToken: string }>, res: Response): Promise<void> {
   const link = await prisma.link.findUnique({ where: { secretToken: req.params.secretToken } });
   if (!link) {
-    throw new HttpError(404, 'NOT_FOUND', 'Not found');
+    throw new HttpError(404, 'NOT_FOUND', 'Не найдено');
   }
 
   const clicks = await prisma.click.findMany({

@@ -5,7 +5,7 @@ import { ACCESS_COOKIE_NAME, verifyAccessToken } from '../domains/auth/tokens.js
 export function authGuard(req: Request, _res: Response, next: NextFunction): void {
   const token = req.cookies?.[ACCESS_COOKIE_NAME] as string | undefined;
   if (!token) {
-    next(new HttpError(401, 'UNAUTHORIZED', 'Authentication required'));
+    next(new HttpError(401, 'UNAUTHORIZED', 'Требуется авторизация'));
     return;
   }
 
@@ -14,6 +14,6 @@ export function authGuard(req: Request, _res: Response, next: NextFunction): voi
     req.user = { id: payload.sub, role: payload.role };
     next();
   } catch {
-    next(new HttpError(401, 'UNAUTHORIZED', 'Invalid or expired token'));
+    next(new HttpError(401, 'UNAUTHORIZED', 'Токен недействителен или истёк'));
   }
 }

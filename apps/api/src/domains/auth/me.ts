@@ -7,7 +7,7 @@ import { toPublicUser } from './serialize.js';
 export async function me(req: Request, res: Response): Promise<void> {
   const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
   if (!user) {
-    throw new HttpError(401, 'UNAUTHORIZED', 'User no longer exists');
+    throw new HttpError(401, 'UNAUTHORIZED', 'Пользователь больше не существует');
   }
   res.status(200).json({ data: toPublicUser(user) });
 }

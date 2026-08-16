@@ -11,7 +11,7 @@ export async function unclaimLink(req: Request<{ id: string }>, res: Response): 
   });
 
   if (result.count === 0) {
-    throw new HttpError(404, 'NOT_FOUND', 'Not found');
+    throw new HttpError(404, 'NOT_FOUND', 'Не найдено');
   }
 
   const link = await prisma.link.findUniqueOrThrow({ where: { id: req.params.id } });

@@ -10,7 +10,7 @@ export async function revokeApiKey(req: Request<{ id: string }>, res: Response):
   });
 
   if (!apiKey) {
-    throw new HttpError(404, 'NOT_FOUND', 'Not found');
+    throw new HttpError(404, 'NOT_FOUND', 'Не найдено');
   }
 
   // Revoke is one-way — repeating it just confirms the same end state, no conflict to report.

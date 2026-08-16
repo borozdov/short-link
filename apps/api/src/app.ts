@@ -17,7 +17,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 
 app.use('/api', (_req, _res, next) => {
-  next(new HttpError(404, 'NOT_FOUND', 'Not found'));
+  next(new HttpError(404, 'NOT_FOUND', 'Не найдено'));
 });
 
 app.get('/:uid', redirectLink);

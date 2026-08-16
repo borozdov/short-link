@@ -9,7 +9,7 @@ export async function getUserLinkStats(req: Request<{ id: string }>, res: Respon
     where: { id: req.params.id, ownerId: req.user!.id },
   });
   if (!link) {
-    throw new HttpError(404, 'NOT_FOUND', 'Not found');
+    throw new HttpError(404, 'NOT_FOUND', 'Не найдено');
   }
 
   const [dailyStats, clicks] = await Promise.all([

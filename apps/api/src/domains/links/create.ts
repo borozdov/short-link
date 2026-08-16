@@ -13,7 +13,7 @@ function isUniqueConstraintViolation(error: unknown): boolean {
 
 function throwForValidationError(error: z.ZodError): never {
   const field = error.issues[0]?.path[0];
-  const message = error.issues[0]?.message ?? 'Invalid request';
+  const message = error.issues[0]?.message ?? 'Некорректный запрос';
 
   if (field === 'customSlug') {
     throw new HttpError(400, 'INVALID_CUSTOM_SLUG', message);
@@ -21,7 +21,7 @@ function throwForValidationError(error: z.ZodError): never {
   if (field === 'expiresInHours') {
     throw new HttpError(400, 'INVALID_EXPIRES_IN_HOURS', message);
   }
-  throw new HttpError(400, 'INVALID_TARGET_URL', 'targetUrl must be a valid URL');
+  throw new HttpError(400, 'INVALID_TARGET_URL', 'targetUrl должен быть корректным URL');
 }
 
 function sendLink(res: Response, link: Link): void {
@@ -74,7 +74,7 @@ export async function createLink(req: Request, res: Response): Promise<void> {
       sendLink(res, link);
     } catch (error) {
       if (isUniqueConstraintViolation(error)) {
-        throw new HttpError(409, 'SLUG_TAKEN', 'This slug is already in use');
+        throw new HttpError(409, 'SLUG_TAKEN', 'Этот слаг уже занят');
       }
       throw error;
     }
@@ -99,5 +99,5 @@ export async function createLink(req: Request, res: Response): Promise<void> {
     }
   }
 
-  throw new HttpError(500, 'UID_EXHAUSTED', 'Could not generate a unique link id');
+  throw new HttpError(500, 'UID_EXHAUSTED', 'Не удалось сгенерировать уникальный идентификатор ссылки');
 }

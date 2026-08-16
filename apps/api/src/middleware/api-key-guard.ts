@@ -37,11 +37,11 @@ export async function resolveApiKeyUser(rawKey: string): Promise<ApiKeyUser> {
   });
 
   if (!apiKey || apiKey.revokedAt) {
-    throw new HttpError(401, 'INVALID_API_KEY', 'Invalid or revoked API key');
+    throw new HttpError(401, 'INVALID_API_KEY', 'Недействительный или отозванный API-ключ');
   }
 
   if (!apiKeyRateLimiter.check(apiKey.id)) {
-    throw new HttpError(429, 'RATE_LIMITED', 'Too many requests for this API key');
+    throw new HttpError(429, 'RATE_LIMITED', 'Слишком много запросов для этого API-ключа');
   }
 
   return { id: apiKey.ownerId, role: apiKey.owner.role };

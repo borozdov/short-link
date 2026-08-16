@@ -14,12 +14,12 @@ const QR_COLOR = { dark: '#0d0d0dff', light: '#fafafaff' };
 export async function getQrCode(req: Request<{ uid: string }>, res: Response): Promise<void> {
   const parsedFormat = formatSchema.safeParse(req.query.format);
   if (!parsedFormat.success) {
-    throw new HttpError(400, 'INVALID_FORMAT', 'format must be svg or png');
+    throw new HttpError(400, 'INVALID_FORMAT', 'format должен быть svg или png');
   }
 
   const link = await prisma.link.findUnique({ where: { uid: req.params.uid } });
   if (!link) {
-    throw new HttpError(404, 'NOT_FOUND', 'Not found');
+    throw new HttpError(404, 'NOT_FOUND', 'Не найдено');
   }
 
   const shortUrl = `${env.BASE_LINK_DOMAIN}/${link.uid}`;

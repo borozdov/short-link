@@ -11,7 +11,7 @@ export function errorHandler(error: unknown, _req: Request, res: Response, _next
 
   console.error(error);
   const body: ApiResponse<never> = {
-    error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' },
+    error: { code: 'INTERNAL_ERROR', message: 'Что-то пошло не так' },
   };
   res.status(500).json(body);
 }

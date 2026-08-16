@@ -7,19 +7,19 @@ import { toPublicUser } from './serialize.js';
 export async function refresh(req: Request, res: Response): Promise<void> {
   const token = req.cookies?.[REFRESH_COOKIE_NAME] as string | undefined;
   if (!token) {
-    throw new HttpError(401, 'UNAUTHORIZED', 'Refresh token missing');
+    throw new HttpError(401, 'UNAUTHORIZED', 'Отсутствует refresh-токен');
   }
 
   let userId: string;
   try {
     userId = verifyRefreshToken(token).sub;
   } catch {
-    throw new HttpError(401, 'UNAUTHORIZED', 'Invalid or expired refresh token');
+    throw new HttpError(401, 'UNAUTHORIZED', 'Refresh-токен недействителен или истёк');
   }
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
-    throw new HttpError(401, 'UNAUTHORIZED', 'User no longer exists');
+    throw new HttpError(401, 'UNAUTHORIZED', 'Пользователь больше не существует');
   }
 
   // Reissues both tokens with fresh full TTLs — refresh slides the whole session forward.

@@ -8,7 +8,7 @@ import { toPublicLink } from './serialize.js';
 export async function claimLink(req: Request, res: Response): Promise<void> {
   const parsed = ClaimLinkRequestSchema.safeParse(req.body);
   if (!parsed.success) {
-    throw new HttpError(400, 'INVALID_SECRET_TOKEN', parsed.error.issues[0]?.message ?? 'Invalid request');
+    throw new HttpError(400, 'INVALID_SECRET_TOKEN', parsed.error.issues[0]?.message ?? 'Некорректный запрос');
   }
   const { secretToken } = parsed.data;
 
@@ -21,9 +21,9 @@ export async function claimLink(req: Request, res: Response): Promise<void> {
   if (result.count === 0) {
     const link = await prisma.link.findUnique({ where: { secretToken } });
     if (!link) {
-      throw new HttpError(404, 'NOT_FOUND', 'Not found');
+      throw new HttpError(404, 'NOT_FOUND', 'Не найдено');
     }
-    throw new HttpError(409, 'ALREADY_CLAIMED', 'This link has already been claimed');
+    throw new HttpError(409, 'ALREADY_CLAIMED', 'Эта ссылка уже привязана к аккаунту');
   }
 
   const link = await prisma.link.findUniqueOrThrow({ where: { secretToken } });

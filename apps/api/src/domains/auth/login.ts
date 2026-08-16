@@ -18,7 +18,7 @@ export async function login(req: Request, res: Response): Promise<void> {
 
   // Same error for unknown email and wrong password — don't leak which one it was.
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-    throw new HttpError(401, 'INVALID_CREDENTIALS', 'Invalid email or password');
+    throw new HttpError(401, 'INVALID_CREDENTIALS', 'Неверный email или пароль');
   }
 
   setAuthCookies(res, user.id, user.role);
