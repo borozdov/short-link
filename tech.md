@@ -1,6 +1,6 @@
 # BOROZDOV LINK — tech.md
 
-v4 — DailyLinkStat type, claim-link schema, личный кабинет endpoints
+v5 — ApiKey type, api-key schema, публичный API и рейт-лимит
 
 ## Changelog
 
@@ -8,6 +8,7 @@ v4 — DailyLinkStat type, claim-link schema, личный кабинет endpoi
 - v2 — добавлены `types/Link.ts`, `types/Click.ts`, `schemas/link-stats.ts` (контракт `GET /api/links/stats/:secretToken` для Задачи 2).
 - v3 — добавлены `types/User.ts`, `schemas/auth.ts` (контракты `RegisterRequest`/`LoginRequest` для Задачи 3).
 - v4 — добавлены `types/DailyLinkStat.ts`, `schemas/claim-link.ts`, эндпоинты `/api/users/links*` (личный кабинет и claim для Задачи 4).
+- v5 — добавлены `types/ApiKey.ts`, `schemas/api-key.ts`, эндпоинты `/api/users/api-keys*`, `Authorization: Bearer` на `POST /api/links`, рейт-лимит на API-ключ (для Задачи 7).
 
 ## Проект
 
@@ -211,6 +212,8 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
 - `schemas/auth.ts` — `RegisterRequest { email: string; password: string }`, `LoginRequest { email: string; password: string }`.
 - `schemas/claim-link.ts` — Zod: `ClaimLinkRequest { secretToken: string }` (непустая строка). Ответ переиспользует существующий тип `Link` (без отдельной Zod-схемы) — обёрнут в `ApiResponse<Link>`.
 - `schemas/link-stats.ts` — Zod: `LinkStatsResponse { uid: string; shortUrl: string; status: LinkStatus; targetUrl: string; createdAt: string; expiresAt: string | null; clickCount: number; clicks: Array<{ occurredAt: string; referrer: string | null }> }`. `GET /api/links/stats/:secretToken`, без логина. `clicks` — последние 100 по `occurredAt` desc, без пагинации в MVP.
+- `types/ApiKey.ts` — `ApiKey` (публичная проекция модели `ApiKey` — без `keyHash`): `{ id: string; ownerId: string; createdAt: string; revokedAt: string | null }`.
+- `schemas/api-key.ts` — Zod: `ApiKeyGenerateResponse { id: string; rawKey: string; createdAt: string }` — ответ генерации, единственное место, где сырой ключ покидает сервер; хранится `keyHash = sha256(rawKey)` без соли (ключ высокоэнтропийный, `nanoid`, в отличие от паролей соль не добавляет защиты от подбора). Список и отзыв переиспользуют `ApiKey` — без отдельной Zod-схемы, тот же прецедент, что `Link` в claim-link.
 
 ### Эндпоинты личного кабинета (Задача 4)
 
@@ -220,6 +223,20 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
 - `GET /api/users/links/:id/stats` → `ApiResponse<{ link: Link; dailyStats: DailyLinkStat[]; clicks: Click[] }>`. `404 NOT_FOUND`, если ссылка не найдена или не принадлежит вызывающему (не палим существование чужой ссылки). `clicks` — последние 100 по `occurredAt` desc.
 - `POST /api/users/links/claim` → body `ClaimLinkRequest` → `ApiResponse<Link>`. `404 NOT_FOUND` — неизвестный `secretToken`; `409 ALREADY_CLAIMED` — у ссылки уже есть `ownerId` (не важно, чей — тот же пользователь или другой).
 - `POST /api/users/links/:id/unclaim` → `ApiResponse<Link>`. Ставит `ownerId = null` (обратное действие к claim; статус и `clickCount` ссылки не трогает, редирект продолжает работать анонимно). `404 NOT_FOUND`, если ссылка не найдена или не принадлежит вызывающему.
+
+### Эндпоинты API-ключей (Задача 7)
+
+Домен `apps/api/src/domains/users/`, роуты под `/api/users/api-keys`, все — за `authGuard`.
+
+- `POST /api/users/api-keys` → `ApiResponse<ApiKeyGenerateResponse>`, `201`. Генерирует новый ключ (`nanoid`); сырое значение возвращается один раз и нигде не хранится, хранится только `keyHash`.
+- `GET /api/users/api-keys` → `ApiResponse<ApiKey[]>`. Ключи где `ownerId = req.user.id`, сортировка по `createdAt` desc, без пагинации в MVP (тот же прецедент, что и `GET /api/users/links`).
+- `POST /api/users/api-keys/:id/revoke` → `ApiResponse<ApiKey>`. Ставит `revokedAt = now()`, если ещё не отозван; повторный вызов на уже отозванном ключе — идемпотентный успех, возвращает текущее состояние без ошибки (отзыв — необратимое односторонее действие, в отличие от claim/unclaim, конфликт здесь не несёт информации). `404 NOT_FOUND`, если ключ не найден или не принадлежит вызывающему.
+
+### Bearer-аутентификация и рейт-лимит на `POST /api/links` (Задача 7)
+
+`POST /api/links` дополнительно принимает `Authorization: Bearer <rawKey>` как альтернативу cookie-сессии. Обе схемы — опциональны: без cookie и без заголовка запрос по-прежнему создаёт анонимную ссылку (`ownerId = null`). Валидная cookie-сессия ИЛИ валидный `Bearer`-ключ — `ownerId` создаваемой ссылки проставляется на вызывающего пользователя. Невалидный/отозванный `Bearer`-ключ — жёсткая ошибка `401 INVALID_API_KEY` (заголовок предъявлен намеренно, ошибка в нём не маскируется). Невалидная/истёкшая cookie на этом эндпоинте, в отличие от `authGuard`, не блокирует запрос — считается отсутствием аутентификации, запрос проходит анонимно (cookie на этом эндпоинте — не обязательный, намеренно предъявленный клиентом креденшел, а фоновое состояние браузера).
+
+Рейт-лимит: 60 запросов/минуту на `apiKey.id`, in-memory (fixed window), без внешней очереди/Redis — тот же принцип, что у `node-cron` (объём не оправдывает внешнюю инфраструктуру). Применяется только к запросам, аутентифицированным `Bearer`-ключом. Превышение — `429 RATE_LIMITED`. Известное ограничение MVP: счётчик сбрасывается при рестарте процесса и не общий между несколькими процессами.
 
 ## UI-примитивы
 
@@ -395,3 +412,9 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
   Предлагаемая форма: см. раздел «Общие типы» → «Эндпоинты личного кабинета (Задача 4)» (уже описана).
   Временная заглушка: не потребовалась — единственный трек, гэп закрыт в том же PR отдельным контрактным коммитом перед фиче-кодом.
   Статус: closed (v4)
+
+- Что нужно: `types/ApiKey.ts`, `schemas/api-key.ts` (`ApiKeyGenerateResponse`), эндпоинты `POST /api/users/api-keys`, `GET /api/users/api-keys`, `POST /api/users/api-keys/:id/revoke`; расширение `POST /api/links` — `Authorization: Bearer` как альтернатива cookie-сессии, привязка `ownerId` при любой успешной аутентификации, рейт-лимит на ключ.
+  Зачем: Задача 7 (доп. сценарии) — публичный API с ключом для программного сокращения. tech.md фиксировал только сам факт задачи и уже существующую модель `ApiKey` (Prisma), без публичной проекции, формы ответов, конкретных эндпоинтов, семантики `ownerId` при Bearer/cookie-аутентификации и числа рейт-лимита.
+  Предлагаемая форма: см. раздел «Общие типы» → «Эндпоинты API-ключей (Задача 7)» и «Bearer-аутентификация и рейт-лимит на `POST /api/links` (Задача 7)» (уже описаны).
+  Временная заглушка: не потребовалась — единственный трек, гэп закрыт в том же PR отдельным контрактным коммитом перед фиче-кодом.
+  Статус: closed (v5)
