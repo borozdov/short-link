@@ -21,7 +21,7 @@ export function LoginPage() {
         <LoginForm loading={loading} onSubmit={submit} />
       </Card>
       <p className={styles.switch}>
-        Don&apos;t have an account? <Link to="/register">Create one</Link>
+        Нет аккаунта? <Link to="/register">Создать</Link>
       </p>
     </div>
   );

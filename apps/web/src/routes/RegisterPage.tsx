@@ -21,7 +21,7 @@ export function RegisterPage() {
         <RegisterForm loading={loading} onSubmit={submit} />
       </Card>
       <p className={styles.switch}>
-        Already have an account? <Link to="/login">Log in</Link>
+        Уже есть аккаунт? <Link to="/login">Войти</Link>
       </p>
     </div>
   );

@@ -26,7 +26,7 @@ export function RegisterForm({ loading, onSubmit }: RegisterFormProps) {
     if (!parsed.success) {
       const nextErrors: FieldErrors = {};
       for (const issue of parsed.error.issues) {
-        if (issue.path[0] === 'email') nextErrors.email = 'Enter a valid email';
+        if (issue.path[0] === 'email') nextErrors.email = 'Введите корректный email';
         if (issue.path[0] === 'password') nextErrors.password = issue.message;
       }
       setErrors(nextErrors);
@@ -48,7 +48,7 @@ export function RegisterForm({ loading, onSubmit }: RegisterFormProps) {
         error={errors.email}
       />
       <Input
-        label="Password"
+        label="Пароль"
         type="password"
         autoComplete="new-password"
         value={password}
@@ -56,7 +56,7 @@ export function RegisterForm({ loading, onSubmit }: RegisterFormProps) {
         error={errors.password}
       />
       <Button type="submit" variant="inverted" loading={loading} className={styles.submit}>
-        Create account
+        Зарегистрироваться
       </Button>
     </form>
   );

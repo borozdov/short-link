@@ -26,7 +26,7 @@ export function LoginForm({ loading, onSubmit }: LoginFormProps) {
     if (!parsed.success) {
       const nextErrors: FieldErrors = {};
       for (const issue of parsed.error.issues) {
-        if (issue.path[0] === 'email') nextErrors.email = 'Enter a valid email';
+        if (issue.path[0] === 'email') nextErrors.email = 'Введите корректный email';
         if (issue.path[0] === 'password') nextErrors.password = issue.message;
       }
       setErrors(nextErrors);
@@ -48,7 +48,7 @@ export function LoginForm({ loading, onSubmit }: LoginFormProps) {
         error={errors.email}
       />
       <Input
-        label="Password"
+        label="Пароль"
         type="password"
         autoComplete="current-password"
         value={password}
@@ -56,7 +56,7 @@ export function LoginForm({ loading, onSubmit }: LoginFormProps) {
         error={errors.password}
       />
       <Button type="submit" variant="inverted" loading={loading} className={styles.submit}>
-        Log in
+        Войти
       </Button>
     </form>
   );

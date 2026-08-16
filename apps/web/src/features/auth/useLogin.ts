@@ -14,7 +14,7 @@ export function useLogin() {
     try {
       await auth.login(payload);
     } catch (error) {
-      showToast(error instanceof ApiError ? error.message : 'Something went wrong');
+      showToast(error instanceof ApiError ? error.message : 'Что-то пошло не так');
     } finally {
       setLoading(false);
     }
