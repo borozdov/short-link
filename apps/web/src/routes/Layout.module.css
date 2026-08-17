@@ -1,4 +1,5 @@
 .header {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -16,7 +17,13 @@
   text-decoration: none;
 }
 
-.actions {
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -35,8 +42,80 @@
   color: var(--text);
 }
 
+.menuToggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.menuToggle:hover {
+  border-color: var(--border-strong);
+}
+
+.menuToggle:focus-visible {
+  outline: none;
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.menuIcon {
+  width: 18px;
+  height: 18px;
+}
+
 .main {
   max-width: 640px;
   margin: 0 auto;
   padding: 48px 24px;
+}
+
+/* 960px breakpoint: see convention comment in theme/tokens.css */
+@media (max-width: 960px) {
+  .nav {
+    display: none;
+  }
+
+  .navOpen {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    animation: navIn 0.3s ease;
+  }
+
+  .navOpen .navLink {
+    padding: 12px 8px;
+  }
+
+  .menuToggle {
+    display: inline-flex;
+  }
+}
+
+@keyframes navIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
