@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type { RefCallback } from 'react';
 import { useSearchParams } from 'react-router';
 import { Card } from '../primitives/Card';
 import { Input } from '../primitives/Input';
@@ -36,6 +37,9 @@ export function BookmarkletPage() {
   }
 
   const bookmarkletCode = buildBookmarkletCode(window.location.origin);
+  const setBookmarkletHref: RefCallback<HTMLAnchorElement> = (node) => {
+    node?.setAttribute('href', bookmarkletCode);
+  };
 
   return (
     <div className={styles.page}>
@@ -44,7 +48,7 @@ export function BookmarkletPage() {
         <p className={styles.description}>
           Перетащите эту ссылку на панель закладок. Кликните по ней на любой странице, чтобы сократить её URL.
         </p>
-        <a href={bookmarkletCode} className={styles.bookmarklet} onClick={(event) => event.preventDefault()}>
+        <a ref={setBookmarkletHref} className={styles.bookmarklet} onClick={(event) => event.preventDefault()}>
           Сократить эту страницу
         </a>
         <p className={styles.note}>Или скопируйте код и создайте закладку вручную</p>
