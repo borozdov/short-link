@@ -20,27 +20,29 @@ export function Table<T>({ columns, rows, emptyMessage = 'No data' }: TableProps
   }
 
   return (
-    <table className={styles.table}>
-      <thead>
-        <tr>
-          {columns.map((column) => (
-            <th key={column.key} className={column.numeric ? styles.numeric : undefined}>
-              {column.header}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row, index) => (
-          <tr key={index}>
+    <div className={styles.wrapper}>
+      <table className={styles.table}>
+        <thead>
+          <tr>
             {columns.map((column) => (
-              <td key={column.key} className={column.numeric ? styles.numeric : undefined}>
-                {column.render(row)}
-              </td>
+              <th key={column.key} className={column.numeric ? styles.numeric : undefined}>
+                {column.header}
+              </th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {rows.map((row, index) => (
+            <tr key={index}>
+              {columns.map((column) => (
+                <td key={column.key} className={column.numeric ? styles.numeric : undefined}>
+                  {column.render(row)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
