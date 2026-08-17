@@ -10,8 +10,13 @@ export function Layout() {
   return (
     <div>
       <header className={styles.header}>
-        <p className={styles.wordmark}>Borozdov Link</p>
+        <Link className={styles.wordmark} to="/">
+          Borozdov Link
+        </Link>
         <div className={styles.actions}>
+          <Link className={styles.navLink} to="/">
+            Сократить ссылку
+          </Link>
           <Link className={styles.navLink} to="/bulk-text">
             Массовое сокращение
           </Link>
