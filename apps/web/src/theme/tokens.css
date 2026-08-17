@@ -1,3 +1,17 @@
+/**
+ * Responsive breakpoints (plain literals, not custom properties — `var()`
+ * can't be read inside `@media` conditions). Reuse these two numbers
+ * verbatim wherever a media query is needed; don't invent a third.
+ *
+ * 960px — nav collapses to the mobile hamburger menu (`Layout.module.css`).
+ *   Estimated from font metrics, not measured — verify empirically against
+ *   the real header (both auth states, both themes) and adjust here + in
+ *   Layout.module.css together if it's off.
+ * 640px — content/spacing tightens (padding, table/tabs scroll behavior,
+ *   row stacking). Matches `.main`'s existing `max-width: 640px` — the
+ *   point where the content column stops having slack to give up.
+ */
+
 :root,
 :root[data-theme='obsidian'] {
   --canvas: #0d0d0d;
