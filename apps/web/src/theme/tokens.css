@@ -5,7 +5,7 @@
  *
  * 960px — nav collapses to the mobile hamburger menu (`Layout.module.css`).
  *   Estimated from font metrics, not measured — verify empirically against
- *   the real header (both auth states, both themes) and adjust here + in
+ *   the real header (both themes) and adjust here + in
  *   Layout.module.css together if it's off.
  * 640px — content/spacing tightens (padding, table/tabs scroll behavior,
  *   row stacking). Matches `.main`'s existing `max-width: 640px` — the
