@@ -1,3 +1,7 @@
+.wrapper {
+  overflow-x: auto;
+}
+
 .tabs {
   display: flex;
   gap: 20px;
@@ -17,6 +21,8 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--slate);
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
   transition:
     color 0.15s ease,
