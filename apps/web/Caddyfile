@@ -1,0 +1,31 @@
+{$DOMAIN:localhost} {
+	encode gzip
+
+	handle /api/* {
+		reverse_proxy api:4000
+	}
+
+	handle /assets/* {
+		root * /srv
+		file_server
+	}
+
+	@staticFiles path /favicon.ico /favicon.png /favicon-16.png /favicon-32.png /apple-touch-icon.png /icon-192.png /icon-512.png /icon-maskable-512.png /robots.txt /sitemap.xml /site.webmanifest
+	handle @staticFiles {
+		root * /srv
+		file_server
+	}
+
+	# Known front-end routes (routes.config.tsx) — served as the SPA shell.
+	@spaRoutes path / /bulk-text /s/*
+	handle @spaRoutes {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Anything else is a short-link uid — hand it to the API for the redirect.
+	handle {
+		reverse_proxy api:4000
+	}
+}
