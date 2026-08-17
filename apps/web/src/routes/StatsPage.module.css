@@ -18,6 +18,7 @@
 .summaryHeader {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
 }
@@ -38,7 +39,8 @@
 
 .meta {
   display: flex;
-  gap: 32px;
+  flex-wrap: wrap;
+  gap: 12px 32px;
   margin: 0;
 }
 
