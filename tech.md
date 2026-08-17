@@ -1,6 +1,6 @@
 # BOROZDOV LINK — tech.md
 
-v5 — ApiKey type, api-key schema, публичный API и рейт-лимит
+v6 — убрана возможность задать свой слаг (custom slug)
 
 ## Changelog
 
@@ -9,6 +9,8 @@ v5 — ApiKey type, api-key schema, публичный API и рейт-лими�
 - v3 — добавлены `types/User.ts`, `schemas/auth.ts` (контракты `RegisterRequest`/`LoginRequest` для Задачи 3).
 - v4 — добавлены `types/DailyLinkStat.ts`, `schemas/claim-link.ts`, эндпоинты `/api/users/links*` (личный кабинет и claim для Задачи 4).
 - v5 — добавлены `types/ApiKey.ts`, `schemas/api-key.ts`, эндпоинты `/api/users/api-keys*`, `Authorization: Bearer` на `POST /api/links`, рейт-лимит на API-ключ (для Задачи 7).
+- v6 — убрана возможность задать свой слаг: поле `customSlug` из `CreateLinkRequest`, поле `isCustomSlug` из модели `Link`/типа `Link` (миграция `remove_custom_slug`), коды ошибок `INVALID_CUSTOM_SLUG`/`SLUG_TAKEN`. `uid` теперь всегда генерируется сервером.
+- v7 — убраны аккаунты целиком: логин, регистрация, личный кабинет, claim ссылки, админ-панель, API-ключи. Убраны `model User`/`enum Role`/`model ApiKey`, поле `Link.ownerId`, эндпоинты `/api/auth/*`, `/api/users/*`, `Authorization: Bearer` на `POST /api/links` (миграция `remove_accounts`). Статистика по ссылке остаётся доступной только через `secretToken` (приватная ссылка/QR), без какого-либо понятия владельца.
 
 ## Проект
 
@@ -18,12 +20,10 @@ BOROZDOV LINK — сервис сокращения ссылок под личн
 
 Ключевые сценарии:
 
-- Быстрое сокращение без регистрации: вставил URL — получил короткую ссылку, QR-код и приватную ссылку на статистику (по секретному токену, без логина).
-- Регистрация опциональна и нужна только тем, кто хочет постоянный личный кабинет со списком всех своих ссылок и историей кликов. Анонимно созданную ссылку можно позже «забрать» в свой аккаунт по тому же секретному токену.
+- Быстрое сокращение без регистрации: вставил URL — получил короткую ссылку, QR-код и приватную ссылку на статистику (по секретному токену). Аккаунтов в продукте нет вообще — статистика по ссылке доступна только тому, у кого есть QR-код или сама секретная ссылка.
 - Срок действия ссылки задаётся при создании; после истечения `link.borozdov.ru/{uid}` редиректит на `borozdov.ru` вместо ошибки.
 - Массовое сокращение: вставил текст с кучей ссылок — получил тот же текст с заменёнными на короткие ссылками, остальной текст не тронут.
-- Админ (Никита) видит всех пользователей, все ссылки (включая анонимные) и агрегаты по каждому.
-- Дополнительные сценарии удобного использования: кастомный слаг, UTM-конструктор при создании, публичный API с ключом для программного сокращения, букмарклет «сократить текущую страницу».
+- Дополнительный сценарий удобного использования: UTM-конструктор при создании.
 
 Домен и хостинг готовы, внешних блокеров нет. Проект ведётся одной сессией последовательно (1 трек).
 
@@ -37,7 +37,6 @@ BOROZDOV LINK — сервис сокращения ссылок под личн
 - **ORM/миграции**: Prisma — не задан во входе, выбран сам: типизированные запросы, миграции из коробки, стандарт для Node+Postgres.
 - **Тест-раннер**: Vitest (+ Supertest для API) — не задан во входе, выбран сам: один раннер на весь монорепозиторий, быстрый, нативный ESM/TS.
 - **Валидация входа**: Zod — схемы одновременно валидируют и порождают типы для `packages/shared`.
-- **Auth**: JWT (access 15 мин + refresh 30 дней, httpOnly cookies), пароли — bcrypt — не задан во входе, выбран сам: без сервера сессий, естественно для отдельного API + SPA.
 - **QR**: npm-пакет `qrcode` — не задан во входе, выбран сам: генерация PNG/SVG по запросу, без хранения файлов, минимум зависимостей.
 - **Детект URL в тексте**: npm-пакет `linkify-it` — не задан во входе, выбран сам: устойчивее самодельного регэкспа на кириллице/пунктуации.
 - **Фоновая работа**: `node-cron`, in-process, без внешней очереди — объём задач (2 джобы) не оправдывает отдельный воркер.
@@ -55,14 +54,10 @@ BOROZDOV LINK — сервис сокращения ссылок под личн
 │   ├── api/                        # Express-бэкенд
 │   │   ├── src/
 │   │   │   ├── domains/
-│   │   │   │   ├── links/          # создание, редирект, истечение, custom slug, utm, bulk-text, qr
-│   │   │   │   ├── auth/           # регистрация, логин, refresh, jwt
-│   │   │   │   ├── users/          # личный кабинет, claim ссылки
-│   │   │   │   └── admin/          # админ-листинги и модерация
+│   │   │   │   └── links/          # создание, редирект, истечение, utm, bulk-text, qr, статистика
 │   │   │   ├── jobs/                # expire-sweep.ts, daily-rollup.ts, scheduler.ts
-│   │   │   ├── clients/             # интерфейсы внешних клиентов + фейки (email)
 │   │   │   ├── db/                  # prisma client, seed.ts
-│   │   │   ├── middleware/          # auth-guard, api-key-guard, error-handler, rate-limit
+│   │   │   ├── middleware/          # error-handler, rate-limit
 │   │   │   ├── config/              # env.ts
 │   │   │   ├── app.ts
 │   │   │   └── server.ts
@@ -74,12 +69,9 @@ BOROZDOV LINK — сервис сокращения ссылок под личн
 │       ├── src/
 │       │   ├── primitives/          # Button, Input, Textarea, Select, Card, Table, Modal, Badge, Toast, Tabs, ThemeToggle, StatCard, CopyButton, QRPreview, EmptyState
 │       │   ├── theme/               # design-токены, ObsidianTitanProvider
-│       │   ├── routes/              # /, /login, /register, /dashboard, /admin, /s/:secretToken, /kitchen-sink
+│       │   ├── routes/              # /, /s/:secretToken, /bulk-text, /kitchen-sink
 │       │   ├── features/
 │       │   │   ├── shorten/         # форма создания + результат + QR
-│       │   │   ├── auth/
-│       │   │   ├── dashboard/
-│       │   │   ├── admin/
 │       │   │   └── bulk-text/
 │       │   ├── api/                 # типизированный fetch-клиент
 │       │   ├── App.tsx
@@ -88,8 +80,8 @@ BOROZDOV LINK — сервис сокращения ссылок под личн
 ├── packages/
 │   └── shared/                     # общие типы и zod-схемы
 │       └── src/
-│           ├── types/               # Link, User, Click, DailyLinkStat, Theme, ApiResponse
-│           └── schemas/             # create-link, bulk-text, auth, claim-link
+│           ├── types/               # Link, Click, DailyLinkStat, Theme, ApiResponse
+│           └── schemas/             # create-link, bulk-text, link-stats
 ├── .env.example
 └── package.json
 ```
@@ -99,30 +91,11 @@ BOROZDOV LINK — сервис сокращения ссылок под личн
 Prisma (`apps/api/prisma/schema.prisma`).
 
 ```prisma
-model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  role         Role     @default(USER)
-  emailVerifiedAt DateTime?
-  createdAt    DateTime @default(now())
-  links        Link[]
-  apiKeys      ApiKey[]
-}
-
-enum Role {
-  USER
-  ADMIN
-}
-
 model Link {
   id          String     @id @default(uuid())
   uid         String     @unique              // путь /{uid}
   targetUrl   String
-  ownerId     String?
-  owner       User?      @relation(fields: [ownerId], references: [id])
-  isCustomSlug Boolean   @default(false)
-  secretToken String     @unique               // доступ к статистике без логина
+  secretToken String     @unique               // доступ к статистике, без аккаунта
   status      LinkStatus @default(ACTIVE)
   expiresAt   DateTime?
   utmSource   String?
@@ -133,7 +106,6 @@ model Link {
   clicks      Click[]
   dailyStats  DailyLinkStat[]
 
-  @@index([ownerId])
   @@index([status, expiresAt])
 }
 
@@ -164,20 +136,9 @@ model DailyLinkStat {
 
   @@id([linkId, date])
 }
-
-model ApiKey {
-  id        String    @id @default(uuid())
-  keyHash   String    @unique   // хранится хеш, не сырой ключ
-  ownerId   String
-  owner     User      @relation(fields: [ownerId], references: [id])
-  createdAt DateTime  @default(now())
-  revokedAt DateTime?
-}
 ```
 
-Правила генерации `uid`: base62, 7 символов, `nanoid`; при коллизии unique-констрейнта — до 5 повторных генераций, дальше 500.
-
-Правила `customSlug` (когда пользователь задаёт свой `uid`): regex `^[a-zA-Z0-9_-]{3,32}$`, запрещённые значения (совпадают с роутами SPA и API-префиксами): `admin`, `api`, `login`, `register`, `dashboard`, `kitchen-sink`, `s`, `stats`, `qr`.
+Правила генерации `uid`: base62, 7 символов, `nanoid`; при коллизии unique-констрейнта — до 5 повторных генераций, дальше 500. Свой `uid` пользователь задать не может — только серверная генерация.
 
 ## Контракты фоновой работы и событий
 
@@ -202,41 +163,13 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
 Путь: `packages/shared/src/`.
 
 - `types/Link.ts` — `Link` (поля модели без `secretToken`/`ipHash`-деталей клиента, публичная проекция), `LinkStatus`.
-- `types/User.ts` — `User` (без `passwordHash`), `Role`.
 - `types/Click.ts` — `Click`.
-- `types/DailyLinkStat.ts` — `DailyLinkStat { linkId: string; date: string; clickCount: number }` — публичная проекция модели `DailyLinkStat` (даты в ISO). Добавлен в Задаче 4 — первой задаче, которая его реально использует (график кликов в личном кабинете).
+- `types/DailyLinkStat.ts` — `DailyLinkStat { linkId: string; date: string; clickCount: number }` — публичная проекция модели `DailyLinkStat` (даты в ISO), пишется `daily-rollup`.
 - `types/ApiResponse.ts` — `ApiResponse<T> = { data: T } | { error: { code: string; message: string } }`. Оборачивает ответ каждого эндпоинта без исключений (используется в каждой задаче трека).
 - `types/Theme.ts` — `Theme = 'obsidian' | 'titan'`. Используется `ThemeProvider`/`ThemeToggle` в общем layout (раздел «Скелет», п.4) — на нём рендерятся страницы всех задач.
-- `schemas/create-link.ts` — Zod: `CreateLinkRequest { targetUrl: string; customSlug?: string; expiresInHours?: number; utm?: { source?: string; medium?: string; campaign?: string } }`, `CreateLinkResponse { shortUrl: string; uid: string; secretToken: string; qrUrl: string }`.
+- `schemas/create-link.ts` — Zod: `CreateLinkRequest { targetUrl: string; expiresInHours?: number; utm?: { source?: string; medium?: string; campaign?: string } }`, `CreateLinkResponse { shortUrl: string; uid: string; secretToken: string; qrUrl: string }`.
 - `schemas/bulk-text.ts` — Zod: `BulkTextRequest { text: string }` (лимит 50 000 символов, максимум 200 ссылок за запрос), `BulkTextResponse { text: string; created: Array<{ original: string; short: string }> }`.
-- `schemas/auth.ts` — `RegisterRequest { email: string; password: string }`, `LoginRequest { email: string; password: string }`.
-- `schemas/claim-link.ts` — Zod: `ClaimLinkRequest { secretToken: string }` (непустая строка). Ответ переиспользует существующий тип `Link` (без отдельной Zod-схемы) — обёрнут в `ApiResponse<Link>`.
-- `schemas/link-stats.ts` — Zod: `LinkStatsResponse { uid: string; shortUrl: string; status: LinkStatus; targetUrl: string; createdAt: string; expiresAt: string | null; clickCount: number; clicks: Array<{ occurredAt: string; referrer: string | null }> }`. `GET /api/links/stats/:secretToken`, без логина. `clicks` — последние 100 по `occurredAt` desc, без пагинации в MVP.
-- `types/ApiKey.ts` — `ApiKey` (публичная проекция модели `ApiKey` — без `keyHash`): `{ id: string; ownerId: string; createdAt: string; revokedAt: string | null }`.
-- `schemas/api-key.ts` — Zod: `ApiKeyGenerateResponse { id: string; rawKey: string; createdAt: string }` — ответ генерации, единственное место, где сырой ключ покидает сервер; хранится `keyHash = sha256(rawKey)` без соли (ключ высокоэнтропийный, `nanoid`, в отличие от паролей соль не добавляет защиты от подбора). Список и отзыв переиспользуют `ApiKey` — без отдельной Zod-схемы, тот же прецедент, что `Link` в claim-link.
-
-### Эндпоинты личного кабинета (Задача 4)
-
-Домен `apps/api/src/domains/users/`, роуты под `/api/users`, все — за `authGuard`.
-
-- `GET /api/users/links` → `ApiResponse<Link[]>`. Ссылки где `ownerId = req.user.id`, сортировка по `createdAt` desc, без пагинации в MVP (тот же прецедент, что и `clicks` в `LinkStatsResponse`).
-- `GET /api/users/links/:id/stats` → `ApiResponse<{ link: Link; dailyStats: DailyLinkStat[]; clicks: Click[] }>`. `404 NOT_FOUND`, если ссылка не найдена или не принадлежит вызывающему (не палим существование чужой ссылки). `clicks` — последние 100 по `occurredAt` desc.
-- `POST /api/users/links/claim` → body `ClaimLinkRequest` → `ApiResponse<Link>`. `404 NOT_FOUND` — неизвестный `secretToken`; `409 ALREADY_CLAIMED` — у ссылки уже есть `ownerId` (не важно, чей — тот же пользователь или другой).
-- `POST /api/users/links/:id/unclaim` → `ApiResponse<Link>`. Ставит `ownerId = null` (обратное действие к claim; статус и `clickCount` ссылки не трогает, редирект продолжает работать анонимно). `404 NOT_FOUND`, если ссылка не найдена или не принадлежит вызывающему.
-
-### Эндпоинты API-ключей (Задача 7)
-
-Домен `apps/api/src/domains/users/`, роуты под `/api/users/api-keys`, все — за `authGuard`.
-
-- `POST /api/users/api-keys` → `ApiResponse<ApiKeyGenerateResponse>`, `201`. Генерирует новый ключ (`nanoid`); сырое значение возвращается один раз и нигде не хранится, хранится только `keyHash`.
-- `GET /api/users/api-keys` → `ApiResponse<ApiKey[]>`. Ключи где `ownerId = req.user.id`, сортировка по `createdAt` desc, без пагинации в MVP (тот же прецедент, что и `GET /api/users/links`).
-- `POST /api/users/api-keys/:id/revoke` → `ApiResponse<ApiKey>`. Ставит `revokedAt = now()`, если ещё не отозван; повторный вызов на уже отозванном ключе — идемпотентный успех, возвращает текущее состояние без ошибки (отзыв — необратимое односторонее действие, в отличие от claim/unclaim, конфликт здесь не несёт информации). `404 NOT_FOUND`, если ключ не найден или не принадлежит вызывающему.
-
-### Bearer-аутентификация и рейт-лимит на `POST /api/links` (Задача 7)
-
-`POST /api/links` дополнительно принимает `Authorization: Bearer <rawKey>` как альтернативу cookie-сессии. Обе схемы — опциональны: без cookie и без заголовка запрос по-прежнему создаёт анонимную ссылку (`ownerId = null`). Валидная cookie-сессия ИЛИ валидный `Bearer`-ключ — `ownerId` создаваемой ссылки проставляется на вызывающего пользователя. Невалидный/отозванный `Bearer`-ключ — жёсткая ошибка `401 INVALID_API_KEY` (заголовок предъявлен намеренно, ошибка в нём не маскируется). Невалидная/истёкшая cookie на этом эндпоинте, в отличие от `authGuard`, не блокирует запрос — считается отсутствием аутентификации, запрос проходит анонимно (cookie на этом эндпоинте — не обязательный, намеренно предъявленный клиентом креденшел, а фоновое состояние браузера).
-
-Рейт-лимит: 60 запросов/минуту на `apiKey.id`, in-memory (fixed window), без внешней очереди/Redis — тот же принцип, что у `node-cron` (объём не оправдывает внешнюю инфраструктуру). Применяется только к запросам, аутентифицированным `Bearer`-ключом. Превышение — `429 RATE_LIMITED`. Известное ограничение MVP: счётчик сбрасывается при рестарте процесса и не общий между несколькими процессами.
+- `schemas/link-stats.ts` — Zod: `LinkStatsResponse { uid: string; shortUrl: string; status: LinkStatus; targetUrl: string; createdAt: string; expiresAt: string | null; clickCount: number; clicks: Array<{ occurredAt: string; referrer: string | null }> }`. `GET /api/links/stats/:secretToken`, без аккаунта. `clicks` — последние 100 по `occurredAt` desc, без пагинации в MVP.
 
 ## UI-примитивы
 
@@ -250,7 +183,7 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
 - **Modal** — `open`, `onClose`, дымка за окном (единственная тень в системе).
 - **Badge** — статус-метка (`active` / `expired` / `disabled`), заглавными, инверсия для акцента.
 - **Toast** — уведомления (скопировано, ошибка).
-- **Tabs** — переключение разделов личного кабинета/админки.
+- **Tabs** — переключение разделов внутри страницы.
 - **ThemeToggle** — переключатель ОБСИДИАН/ТИТАН, мгновенный, без каскадного перехода.
 - **StatCard** — карточка метрики, число — моноширинным с `tabular-nums`.
 - **CopyButton** — копирует короткую ссылку в буфer, короткая анимация.
@@ -262,9 +195,9 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
 За владельцем ядра (единственный трек, но правки — отдельным коммитом с явным описанием):
 
 - Миграции: `apps/api/prisma/migrations/*`, генерируются из `schema.prisma`, применяются шагом деплоя (`prisma migrate deploy`).
-- Сид-скрипт: `apps/api/src/db/seed.ts` — один демо-админ, несколько демо-ссылок (активная, с кастомным слагом, истёкшая) с демо-кликами для фейковых данных дашборда/kitchen-sink.
+- Сид-скрипт: `apps/api/src/db/seed.ts` — несколько демо-ссылок (активная, истёкшая, без клика) с демо-кликами для фейковых данных kitchen-sink/статистики.
 - Конфиг: `apps/api/src/config/env.ts` и `apps/web/src/config/env.ts`, единая точка чтения переменных окружения.
-- `.env.example` в корне — все переменные, без реальных секретов: `DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `BASE_LINK_DOMAIN`, `BASE_FALLBACK_URL`, `IP_HASH_SALT`, `SMTP_*` (опционально, фейк по умолчанию).
+- `.env.example` в корне — все переменные, без реальных секретов: `DATABASE_URL`, `BASE_LINK_DOMAIN`, `BASE_FALLBACK_URL`, `IP_HASH_SALT`.
 
 ## Конвенции кода
 
@@ -277,7 +210,7 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
 - TypeScript strict mode везде. Функциональные React-компоненты, без классов.
 - Валидация любого внешнего входа (API body, query) — через Zod-схемы из `packages/shared`, до попадания в доменную логику.
 - Ошибки API — единый формат через `ApiResponse`, централизованный error-middleware, никаких голых `throw` до клиента.
-- Секреты (`secretToken`, `passwordHash`, сырые API-ключи) никогда не логируются и не попадают в публичные типы `Link`/`User`.
+- Секреты (`secretToken`) никогда не логируются и не попадают в публичные типы `Link`.
 
 ## Тесты
 
@@ -305,10 +238,9 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
 2. `schema.prisma` целиком (раздел «Схема данных»), первая миграция, `seed.ts`.
 3. Конфиг-модуль и `.env.example`.
 4. UI-примитивы + тема (CSS-переменные ОБСИДИАН/ТИТАН, `ThemeProvider`, `ThemeToggle`), роут `/kitchen-sink` со всеми примитивами.
-5. Каркас Express (`app.ts`, error-middleware, auth-guard-заглушка) и каркас React (роутинг, layout, шапка с `ThemeToggle`).
-6. Фейк `EmailSender` (интерфейс + консольная реализация) в `clients/`.
-7. `scheduler.ts` с демо-джобой (лог в консоль по `node-cron`), подключение `expire-sweep`/`daily-rollup` как заглушек.
-8. Эталонная сквозная вертикаль: анонимное создание ссылки → редирект → запись клика (домен `links`, минимальный набор полей, без custom slug/UTM/QR — это отдельные задачи трека).
+5. Каркас Express (`app.ts`, error-middleware) и каркас React (роутинг, layout, шапка с `ThemeToggle`).
+6. `scheduler.ts` с демо-джобой (лог в консоль по `node-cron`), подключение `expire-sweep`/`daily-rollup` как заглушек.
+7. Эталонная сквозная вертикаль: анонимное создание ссылки → редирект → запись клика (домен `links`, минимальный набор полей, без UTM/QR — это отдельные задачи трека).
 
 Чек-лист «скелет готов»:
 
@@ -316,7 +248,6 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
 - [ ] `ThemeToggle` переключает ОБСИДИАН/ТИТАН мгновенно, выбор сохраняется (localStorage), при первом визите — из `prefers-color-scheme`.
 - [ ] Все UI-примитивы из раздела «UI-примитивы» отрендерены на `/kitchen-sink`.
 - [ ] `node-cron` гоняет демо-джобу, видно в логах.
-- [ ] Фейковый `EmailSender` пишет письма в консоль вместо реальной отправки.
 - [ ] Миграции применяются на чистой БД, `seed.ts` наполняет демо-данными.
 - [ ] Эталонная вертикаль (анонимное создание ссылки → редирект → клик) работает end-to-end в main.
 - [ ] `.env.example` покрывает все переменные, приложение стартует без реальных секретов.
@@ -327,13 +258,13 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
 
 Что не трогать вне отдельного явного коммита: `apps/api/prisma/migrations/*`, схему в `prisma/schema.prisma`, `packages/shared` — правки контрактов и общих типов только через append в разделы «Схема данных»/«Общие типы» этого файла с бампом версии в «Changelog».
 
-### Задача 1 — Создание ссылки: custom slug, срок действия, QR
+### Задача 1 — Создание ссылки: срок действия, QR
 
-Цель: полноценное создание ссылки поверх эталонной вертикали — кастомный слаг, срок действия, QR.
-Контракты/типы: `CreateLinkRequest`/`CreateLinkResponse`, правила генерации `uid` и валидации `customSlug` (раздел «Схема данных»).
+Цель: полноценное создание ссылки поверх эталонной вертикали — срок действия, QR.
+Контракты/типы: `CreateLinkRequest`/`CreateLinkResponse`, правила генерации `uid` (раздел «Схема данных»).
 Примитивы: Card (контейнер формы и результата), Input, Textarea, Select, Button, QRPreview, CopyButton, Toast.
-Критерии приёмки: анонимный пользователь создаёт ссылку без логина; можно задать свой слаг (конфликт/запрещённое слово → понятная ошибка); можно задать срок действия (без срока — бессрочно); ответ содержит короткую ссылку, QR (PNG/SVG) и ссылку на статистику по `secretToken`.
-Тесты: контрактный на `CreateLinkResponse`, валидация `customSlug` (запрещённые слова, формат), ошибка на невалидный `targetUrl`.
+Критерии приёмки: анонимный пользователь создаёт ссылку без логина; можно задать срок действия (без срока — бессрочно); ответ содержит короткую ссылку, QR (PNG/SVG) и ссылку на статистику по `secretToken`.
+Тесты: контрактный на `CreateLinkResponse`, ошибка на невалидный `targetUrl`.
 
 ### Задача 2 — Истечение и fallback-редирект
 
@@ -343,31 +274,7 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
 Критерии приёмки: истёкшая/отключённая/несуществующая ссылка редиректит на `BASE_FALLBACK_URL`; `expire-sweep` переводит `ACTIVE` в `EXPIRED` по расписанию; страница `/s/:secretToken` показывает счётчик кликов и таймлайн без логина.
 Тесты: путь ошибки (три случая fallback), идемпотентность `expire-sweep`.
 
-### Задача 3 — Аутентификация
-
-Цель: регистрация, логин, JWT (access+refresh), роли `USER`/`ADMIN`.
-Контракты/типы: `RegisterRequest`/`LoginRequest`, `User` (публичная проекция), фейк `EmailSender` (верификационное письмо, не блокирует логин в MVP).
-Примитивы: Input, Button, Toast.
-Критерии приёмки: регистрация с email+паролем; логин выдаёт httpOnly access/refresh cookies; защищённые роуты отклоняют запрос без валидного access-токена; refresh продлевает сессию.
-Тесты: контрактный на форму `RegisterRequest`/`LoginRequest`, путь ошибки (неверный пароль, занятый email).
-
-### Задача 4 — Личный кабинет и claim ссылки
-
-Цель: список своих ссылок, статистика по каждой, привязка анонимной ссылки по `secretToken`.
-Контракты/типы: `ClaimLinkRequest`, `DailyLinkStat`.
-Примитивы: Table, Tabs, StatCard, EmptyState, Modal (подтверждение удаления).
-Критерии приёмки: авторизованный пользователь видит только свои ссылки (`ownerId` = текущий пользователь); может ввести `secretToken` чужой/своей анонимной ссылки и забрать её себе (`ownerId` проставляется, повторный claim той же ссылки другим пользователем — ошибка); графики кликов используют `DailyLinkStat`.
-Тесты: контрактный на изоляцию по `ownerId` (пользователь A не видит ссылки пользователя B), путь ошибки повторного claim.
-
-### Задача 5 — Админ-панель
-
-Цель: список всех пользователей и всех ссылок (включая анонимные), агрегаты по пользователю, модерация.
-Контракты/типы: `Link`, `User`, `daily-rollup`-агрегаты.
-Примитивы: Table, Tabs, StatCard, Badge, Modal.
-Критерии приёмки: доступ только роли `ADMIN`; список пользователей с количеством ссылок и суммой кликов на пользователя; список всех ссылок с фильтром по статусу/владельцу; возможность перевести ссылку в `DISABLED`.
-Тесты: контрактный на доступ (не-админ получает 403), путь ошибки (модерация несуществующей ссылки).
-
-### Задача 6 — Массовое сокращение ссылок в тексте
+### Задача 3 — Массовое сокращение ссылок в тексте
 
 Цель: вставка большого текста, замена всех найденных URL на короткие ссылки, остальной текст не тронут.
 Контракты/типы: `BulkTextRequest`/`BulkTextResponse`, лимиты (50 000 символов, 200 ссылок), правило пропуска URL на собственном домене.
@@ -375,13 +282,13 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
 Критерии приёмки: смешанный текст (URL + обычный текст) на выходе — тот же текст с заменёнными ссылками; ссылки на `link.borozdov.ru` не сокращаются повторно; превышение лимита — понятная ошибка, ничего не создаётся частично.
 Тесты: property-based на извлечение URL, контрактный на `BulkTextResponse`, путь ошибки (превышение лимита).
 
-### Задача 7 — Доп. сценарии: UTM, публичный API, букмарклет
+### Задача 4 — UTM-конструктор
 
-Цель: UTM-конструктор при создании ссылки, публичный API с ключом, букмарклет.
-Контракты/типы: `utmSource`/`utmMedium`/`utmCampaign` на `Link` (уже в схеме), `ApiKey`, контракт «UTM на редиректе».
+Цель: UTM-конструктор при создании ссылки.
+Контракты/типы: `utmSource`/`utmMedium`/`utmCampaign` на `Link` (уже в схеме), контракт «UTM на редиректе».
 Примитивы: Input, Badge, CopyButton.
-Критерии приёмки: при создании можно задать UTM-метки, они домерживаются в целевой URL при редиректе; авторизованный пользователь генерирует API-ключ в личном кабинете (показывается один раз, хранится хеш); `POST /api/links` принимает `Authorization: Bearer <key>` как альтернативу cookie-сессии, рейт-лимит на ключ; страница с текстом букмарклета и инструкцией — открывает `link.borozdov.ru` с текущим URL вкладки, создаёт анонимную ссылку и показывает результат.
-Тесты: контрактный на UTM-merge при редиректе, путь ошибки (невалидный/отозванный API-ключ — 401).
+Критерии приёмки: при создании можно задать UTM-метки, они домерживаются в целевой URL при редиректе.
+Тесты: контрактный на UTM-merge при редиректе.
 
 ## Очередь контрактов
 
@@ -401,20 +308,4 @@ Payload: `{ date: string }` (ISO-дата суток, по умолчанию �
   Временная заглушка: не потребовалась — единственный трек, гэп закрыт в том же PR отдельным контрактным коммитом перед фиче-кодом.
   Статус: closed (v2)
 
-- Что нужно: `types/User.ts` (`User` публичная проекция, `Role`) и `schemas/auth.ts` (`RegisterRequest`/`LoginRequest`).
-  Зачем: Задача 3 (аутентификация) — регистрация, логин, JWT access/refresh, роли `USER`/`ADMIN`.
-  Предлагаемая форма: см. раздел «Общие типы» (уже описана).
-  Временная заглушка: не потребовалась — единственный трек, гэп закрыт в том же PR отдельным контрактным коммитом перед фиче-кодом.
-  Статус: closed (v3)
-
-- Что нужно: `types/DailyLinkStat.ts`, `schemas/claim-link.ts` (полная форма, включая ответ), эндпоинты `GET /api/users/links`, `GET /api/users/links/:id/stats`, `POST /api/users/links/claim`, `POST /api/users/links/:id/unclaim`.
-  Зачем: Задача 4 (личный кабинет) — список своих ссылок, статистика по каждой (график по `DailyLinkStat`), claim анонимной ссылки по `secretToken`. tech.md фиксировал только `ClaimLinkRequest`/`DailyLinkStat` как контракты Задачи 4 без формы ответов и без формы эндпоинтов личного кабинета; список/стата/unclaim-эндпоинты и разрешение «удаления» как un-claim (симметрично claim, без пересечения с админ-модерацией `DISABLED` из Задачи 5) — решения, принятые при подготовке слайса.
-  Предлагаемая форма: см. раздел «Общие типы» → «Эндпоинты личного кабинета (Задача 4)» (уже описана).
-  Временная заглушка: не потребовалась — единственный трек, гэп закрыт в том же PR отдельным контрактным коммитом перед фиче-кодом.
-  Статус: closed (v4)
-
-- Что нужно: `types/ApiKey.ts`, `schemas/api-key.ts` (`ApiKeyGenerateResponse`), эндпоинты `POST /api/users/api-keys`, `GET /api/users/api-keys`, `POST /api/users/api-keys/:id/revoke`; расширение `POST /api/links` — `Authorization: Bearer` как альтернатива cookie-сессии, привязка `ownerId` при любой успешной аутентификации, рейт-лимит на ключ.
-  Зачем: Задача 7 (доп. сценарии) — публичный API с ключом для программного сокращения. tech.md фиксировал только сам факт задачи и уже существующую модель `ApiKey` (Prisma), без публичной проекции, формы ответов, конкретных эндпоинтов, семантики `ownerId` при Bearer/cookie-аутентификации и числа рейт-лимита.
-  Предлагаемая форма: см. раздел «Общие типы» → «Эндпоинты API-ключей (Задача 7)» и «Bearer-аутентификация и рейт-лимит на `POST /api/links` (Задача 7)» (уже описаны).
-  Временная заглушка: не потребовалась — единственный трек, гэп закрыт в том же PR отдельным контрактным коммитом перед фиче-кодом.
-  Статус: closed (v5)
+Записи, закрытые в v3/v4/v5 (аккаунты, личный кабинет, claim, API-ключи), удалены в v7 вместе с контрактами, которые они описывали — см. Changelog v7.

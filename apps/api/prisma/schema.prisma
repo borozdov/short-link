@@ -7,29 +7,10 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  role         Role     @default(USER)
-  emailVerifiedAt DateTime?
-  createdAt    DateTime @default(now())
-  links        Link[]
-  apiKeys      ApiKey[]
-}
-
-enum Role {
-  USER
-  ADMIN
-}
-
 model Link {
   id          String     @id @default(uuid())
   uid         String     @unique              // путь /{uid}
   targetUrl   String
-  ownerId     String?
-  owner       User?      @relation(fields: [ownerId], references: [id])
-  isCustomSlug Boolean   @default(false)
   secretToken String     @unique               // доступ к статистике без логина
   status      LinkStatus @default(ACTIVE)
   expiresAt   DateTime?
@@ -41,7 +22,6 @@ model Link {
   clicks      Click[]
   dailyStats  DailyLinkStat[]
 
-  @@index([ownerId])
   @@index([status, expiresAt])
 }
 
@@ -71,13 +51,4 @@ model DailyLinkStat {
   clickCount Int      @default(0)
 
   @@id([linkId, date])
-}
-
-model ApiKey {
-  id        String    @id @default(uuid())
-  keyHash   String    @unique   // хранится хеш, не сырой ключ
-  ownerId   String
-  owner     User      @relation(fields: [ownerId], references: [id])
-  createdAt DateTime  @default(now())
-  revokedAt DateTime?
 }

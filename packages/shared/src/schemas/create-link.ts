@@ -1,26 +1,7 @@
 import { z } from 'zod';
 
-export const FORBIDDEN_SLUGS = [
-  'admin',
-  'api',
-  'login',
-  'register',
-  'dashboard',
-  'kitchen-sink',
-  's',
-  'stats',
-  'qr',
-];
-
-const slugPattern = /^[a-zA-Z0-9_-]{3,32}$/;
-
 export const CreateLinkRequestSchema = z.object({
   targetUrl: z.string().url(),
-  customSlug: z
-    .string()
-    .regex(slugPattern, 'От 3 до 32 символов: латинские буквы, цифры, _ или -')
-    .refine((slug) => !FORBIDDEN_SLUGS.includes(slug.toLowerCase()), 'Этот слаг зарезервирован')
-    .optional(),
   expiresInHours: z.number().int().positive().optional(),
   utm: z
     .object({

@@ -9,14 +9,20 @@ import styles from './ShortenForm.module.css';
 const EXPIRY_OPTIONS = [
   { label: 'Бессрочно', value: '' },
   { label: '1 час', value: '1' },
+  { label: '6 часов', value: '6' },
+  { label: '12 часов', value: '12' },
   { label: '24 часа', value: '24' },
+  { label: '3 дня', value: '72' },
   { label: '7 дней', value: '168' },
+  { label: '14 дней', value: '336' },
   { label: '30 дней', value: '720' },
+  { label: '90 дней', value: '2160' },
+  { label: '180 дней', value: '4320' },
+  { label: '1 год', value: '8760' },
 ];
 
 interface FieldErrors {
   targetUrl?: string;
-  customSlug?: string;
 }
 
 export interface ShortenFormProps {
@@ -26,7 +32,6 @@ export interface ShortenFormProps {
 
 export function ShortenForm({ loading, onSubmit }: ShortenFormProps) {
   const [targetUrl, setTargetUrl] = useState('');
-  const [customSlug, setCustomSlug] = useState('');
   const [expiresValue, setExpiresValue] = useState('');
   const [utmSource, setUtmSource] = useState('');
   const [utmMedium, setUtmMedium] = useState('');
@@ -47,7 +52,6 @@ export function ShortenForm({ loading, onSubmit }: ShortenFormProps) {
 
     const payload = {
       targetUrl,
-      customSlug: customSlug.trim() || undefined,
       expiresInHours: expiresValue ? Number(expiresValue) : undefined,
       utm,
     };
@@ -57,7 +61,6 @@ export function ShortenForm({ loading, onSubmit }: ShortenFormProps) {
       const nextErrors: FieldErrors = {};
       for (const issue of parsed.error.issues) {
         if (issue.path[0] === 'targetUrl') nextErrors.targetUrl = 'Введите корректный URL';
-        if (issue.path[0] === 'customSlug') nextErrors.customSlug = issue.message;
       }
       setErrors(nextErrors);
       return;
@@ -75,13 +78,6 @@ export function ShortenForm({ loading, onSubmit }: ShortenFormProps) {
         value={targetUrl}
         onChange={(event) => setTargetUrl(event.target.value)}
         error={errors.targetUrl}
-      />
-      <Input
-        label="Свой слаг (необязательно)"
-        placeholder="my-link"
-        value={customSlug}
-        onChange={(event) => setCustomSlug(event.target.value)}
-        error={errors.customSlug}
       />
       <Select label="Срок действия" value={expiresValue} onChange={setExpiresValue} options={EXPIRY_OPTIONS} />
       <p className={styles.sectionLabel}>UTM-метки (необязательно)</p>

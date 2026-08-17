@@ -5,6 +5,7 @@ import { Badge } from '../primitives/Badge';
 import { StatCard } from '../primitives/StatCard';
 import { Table } from '../primitives/Table';
 import { useLinkStats } from '../features/stats/useLinkStats';
+import { useDocumentHead } from '../seo/useDocumentHead';
 import styles from './StatsPage.module.css';
 
 const STATUS_VARIANT: Record<LinkStatus, 'default' | 'inverted'> = {
@@ -27,9 +28,16 @@ export function StatsPage() {
   const { secretToken } = useParams<{ secretToken: string }>();
   const { data, loading, notFound } = useLinkStats(secretToken ?? '');
 
+  useDocumentHead({
+    title: 'Статистика ссылки — BOROZDOV LINK',
+    description: 'Приватная статистика переходов по короткой ссылке. Доступна только по секретному токену.',
+    robots: 'noindex, nofollow',
+  });
+
   if (loading) {
     return (
       <div className={styles.page}>
+        <h1 className="srOnly">Статистика ссылки</h1>
         <Card padding="lg">
           <p className={styles.message}>Загрузка…</p>
         </Card>
@@ -40,6 +48,7 @@ export function StatsPage() {
   if (notFound || !data) {
     return (
       <div className={styles.page}>
+        <h1 className="srOnly">Статистика ссылки</h1>
         <Card padding="lg">
           <p className={styles.message}>Ссылка не найдена.</p>
         </Card>
@@ -49,6 +58,7 @@ export function StatsPage() {
 
   return (
     <div className={styles.page}>
+      <h1 className="srOnly">Статистика ссылки {data.shortUrl}</h1>
       <Card padding="lg">
         <div className={styles.summary}>
           <div className={styles.summaryHeader}>

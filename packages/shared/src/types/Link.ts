@@ -5,8 +5,6 @@ export interface Link {
   id: string;
   uid: string;
   targetUrl: string;
-  ownerId: string | null;
-  isCustomSlug: boolean;
   status: LinkStatus;
   expiresAt: string | null;
   utmSource: string | null;

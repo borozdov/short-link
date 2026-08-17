@@ -1,0 +1,10 @@
+# BOROZDOV LINK — link.borozdov.ru
+# Индексируются только публичные страницы инструмента.
+# /s/:secretToken — приватная статистика по секретному токену, не для индекса.
+# /:uid — редиректы на короткие ссылки, не самостоятельные страницы контента.
+User-agent: *
+Allow: /$
+Allow: /bulk-text$
+Disallow: /
+
+Sitemap: https://link.borozdov.ru/sitemap.xml
