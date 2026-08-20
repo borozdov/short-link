@@ -40,6 +40,8 @@ npm run build                                # api tsc build + web vite build
 npm run dev --workspace apps/bot             # tsx watch src/index.ts, long polling
 ```
 
+`npm run <script> --workspace X` changes cwd to that workspace before running, so `dotenv/config` reads `apps/X/.env`, not the repo-root `.env` — that's why `apps/api/.env` exists as its own gitignored copy alongside the root one. `apps/bot` needs the same: a local `apps/bot/.env` with `TELEGRAM_BOT_TOKEN` and `BOT_API_BASE_URL`.
+
 Single workspace / single test file:
 
 ```bash
