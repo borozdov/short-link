@@ -34,14 +34,6 @@ npm run test                                 # vitest run across all workspaces
 npm run build                                # api tsc build + web vite build
 ```
 
-`apps/bot` (Telegram bot) is not part of the default `npm run dev` — it needs `TELEGRAM_BOT_TOKEN`, which most local setups don't have. Run it explicitly:
-
-```bash
-npm run dev --workspace apps/bot             # tsx watch src/index.ts, long polling
-```
-
-`npm run <script> --workspace X` changes cwd to that workspace before running, so `dotenv/config` reads `apps/X/.env`, not the repo-root `.env` — that's why `apps/api/.env` exists as its own gitignored copy alongside the root one. `apps/bot` needs the same: a local `apps/bot/.env` with `TELEGRAM_BOT_TOKEN` and `BOT_API_BASE_URL`.
-
 Single workspace / single test file:
 
 ```bash
@@ -64,7 +56,7 @@ There is no CI; `npm run lint && npm run typecheck && npm run test` locally is t
 
 ## Architecture
 
-Monorepo: `apps/api` (Express + Prisma/Postgres), `apps/web` (React + Vite SPA), `apps/bot` (Telegram bot, grammY, long polling), `packages/shared` (Zod schemas + types consumed by all three — this is the actual API contract, not just documentation of it).
+Monorepo: `apps/api` (Express + Prisma/Postgres), `apps/web` (React + Vite SPA), `packages/shared` (Zod schemas + types consumed by both — this is the actual API contract, not just documentation of it).
 
 **No accounts, ever.** There is no login, no user model, no ownership on links. Access to a link's stats is solely by possessing its `secretToken` (a second, private URL/QR distinct from the short link itself). Do not reintroduce auth-shaped code (e.g. `Authorization` headers, `ownerId`) without a `tech.md` contract bump — accounts existed through v6 and were fully removed in v7 (see Changelog).
 
@@ -76,8 +68,6 @@ Monorepo: `apps/api` (Express + Prisma/Postgres), `apps/web` (React + Vite SPA),
 3. Expired/disabled/nonexistent, or bot-preview fallback → `302` to `BASE_FALLBACK_URL`. No `Click` row is written for this or for outcome 1 — only outcome 2 represents a real visit.
 
 **Background jobs** (`apps/api/src/jobs/`, in-process `node-cron`, no external queue): `expire-sweep.ts` (hourly, flips `ACTIVE`→`EXPIRED` past `expiresAt`) and `daily-rollup.ts` (00:10 UTC, aggregates `Click` into `DailyLinkStat` via upsert). Both are designed to be idempotent re-run on the same DB state/payload — preserve that when touching them, it's an explicit test requirement (see `tech.md` § Тесты).
-
-**`apps/bot/src/`** is a thin Telegram client, no database of its own: `api-client.ts` calls the same `apps/api` HTTP endpoints as `apps/web` (`createLink`, `getLinkStats`, `updateLinkStatus`), `keyboard.ts` builds the inline keyboard attached to every bot reply (stats / enable-disable), `handlers/` wires message and callback-query handling. A link's `secretToken` lives only inside that reply message's `callback_data` — the bot never persists it anywhere, so "managing" a link works only through that Telegram message's own buttons, not a list view.
 
 **`packages/shared/src/`** is the contract boundary: `schemas/*` are Zod schemas that both validate API input and derive the shared TypeScript types (`types/*`) — never hand-write a duplicate type that a Zod schema already implies. Every API response is wrapped in `ApiResponse<T> = { data: T } | { error: { code, message } }`, enforced through the central error-middleware (`apps/api/src/middleware/error-handler.ts`) — no bare `throw` should reach the client uncaught.
 

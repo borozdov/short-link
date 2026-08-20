@@ -6,4 +6,3 @@ export * from './types/DailyLinkStat';
 export * from './schemas/create-link';
 export * from './schemas/link-stats';
 export * from './schemas/bulk-text';
-export * from './schemas/update-link-status';

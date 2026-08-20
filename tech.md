@@ -1,6 +1,6 @@
 # BOROZDOV LINK — tech.md
 
-v9 — Telegram-бот: мгновенное сокращение и управление статусом ссылки
+v10 — откат Telegram-бота
 
 ## Changelog
 
@@ -13,6 +13,7 @@ v9 — Telegram-бот: мгновенное сокращение и управ�
 - v7 — убраны аккаунты целиком: логин, регистрация, личный кабинет, claim ссылки, админ-панель, API-ключи. Убраны `model User`/`enum Role`/`model ApiKey`, поле `Link.ownerId`, эндпоинты `/api/auth/*`, `/api/users/*`, `Authorization: Bearer` на `POST /api/links` (миграция `remove_accounts`). Статистика по ссылке остаётся доступной только через `secretToken` (приватная ссылка/QR), без какого-либо понятия владельца.
 - v8 — превью коротких ссылок для ботов соцсетей/мессенджеров на `GET /:uid` (`domains/links/bot-preview.ts`): зеркалирование `og:title`/`og:description`/`og:image` целевой страницы вместо редиректа, SSRF-защищённый server-side fetch, in-memory кэш. Схема/миграции не тронуты — новых полей нет. См. «Bot-preview на редиректе» в разделе «Контракты фоновой работы и событий».
 - v9 — Telegram-бот (`apps/bot`, Задача 5): мгновенное сокращение ссылки прямо в чате и ручное вкл/выкл ссылки из бота. Новый контракт `PATCH /api/links/stats/:secretToken` (`schemas/update-link-status.ts`) — единственный способ поменять `Link.status` руками, помимо `expire-sweep`; доступ, как и к статистике, только по `secretToken`, никакого понятия владельца не вводится. Бот не хранит собственную БД — список ссылок пользователя живёт только в истории чата Telegram (кнопки под каждым ответом бота), схема/миграции не тронуты.
+- v10 — Telegram-бот убран целиком по решению владельца (не нужен продукту): `apps/bot`, контракт `PATCH /api/links/stats/:secretToken` и схема `schemas/update-link-status.ts` из v9 удалены. `Link.status` снова меняется только через `expire-sweep`. Задача 5 из «Треки» и соответствующая запись из «Очереди контрактов» удалены вместе с контрактом, который они описывали.
 
 ## Проект
 
@@ -42,7 +43,6 @@ BOROZDOV LINK — сервис сокращения ссылок под личн
 - **QR**: npm-пакет `qrcode` — не задан во входе, выбран сам: генерация PNG/SVG по запросу, без хранения файлов, минимум зависимостей.
 - **Детект URL в тексте**: npm-пакет `linkify-it` — не задан во входе, выбран сам: устойчивее самодельного регэкспа на кириллице/пунктуации.
 - **Фоновая работа**: `node-cron`, in-process, без внешней очереди — объём задач (2 джобы) не оправдывает отдельный воркер.
-- **Telegram-бот**: `grammY` — не задан во входе, выбран сам: TS-first API, long polling без публичного HTTPS на деве (в отличие от webhook-режима).
 - **Хостинг/деплой**: домен и хостинг настроены пользователем заранее, процесс деплоя вне рамок `tech.md`.
 - **CI**: нет (не задан во входе).
 - **Трекер задач**: нет — задачи списком в разделе «Треки».
@@ -68,25 +68,17 @@ BOROZDOV LINK — сервис сокращения ссылок под личн
 │   │   │   ├── schema.prisma
 │   │   │   └── migrations/
 │   │   └── test/
-│   ├── web/                        # React SPA
-│   │   ├── src/
-│   │   │   ├── primitives/          # Button, Input, Textarea, Select, Card, Table, Modal, Badge, Toast, Tabs, ThemeToggle, StatCard, CopyButton, QRPreview, EmptyState
-│   │   │   ├── theme/               # design-токены, ObsidianTitanProvider
-│   │   │   ├── routes/              # /, /s/:secretToken, /bulk-text, /kitchen-sink
-│   │   │   ├── features/
-│   │   │   │   ├── shorten/         # форма создания + результат + QR
-│   │   │   │   └── bulk-text/
-│   │   │   ├── api/                 # типизированный fetch-клиент
-│   │   │   ├── App.tsx
-│   │   │   └── main.tsx
-│   │   └── test/
-│   └── bot/                        # Telegram-бот (grammY, long polling)
+│   └── web/                        # React SPA
 │       ├── src/
-│       │   ├── api-client.ts        # типизированный fetch-клиент к apps/api (свой, не шарится с web)
-│       │   ├── keyboard.ts          # inline-клавиатура под ответом бота (статистика, вкл/выкл)
-│       │   ├── handlers/            # start.ts, link-message.ts, callback-query.ts
-│       │   ├── config/              # env.ts
-│       │   └── bot.ts
+│       │   ├── primitives/          # Button, Input, Textarea, Select, Card, Table, Modal, Badge, Toast, Tabs, ThemeToggle, StatCard, CopyButton, QRPreview, EmptyState
+│       │   ├── theme/               # design-токены, ObsidianTitanProvider
+│       │   ├── routes/              # /, /s/:secretToken, /bulk-text, /kitchen-sink
+│       │   ├── features/
+│       │   │   ├── shorten/         # форма создания + результат + QR
+│       │   │   └── bulk-text/
+│       │   ├── api/                 # типизированный fetch-клиент
+│       │   ├── App.tsx
+│       │   └── main.tsx
 │       └── test/
 ├── packages/
 │   └── shared/                     # общие типы и zod-схемы
@@ -176,8 +168,6 @@ SSRF-guard на fetch: только `http`/`https`, резолв хоста че
 Клик не пишется НИ В ОДНОМ из двух случаев (успешное зеркалирование или откат на `302`) — бот не человек, вне зависимости от того, получилось ли зеркалирование.
 Известное ограничение: SSRF-guard проверяет резолвленный на момент запроса адрес, не пиннит его на соединение — теоретический DNS rebinding между проверкой и `fetch()` не закрыт; сочтено неоправданным для MVP (нужен голый `http`/`https`-запрос с ручным управлением сокетом вместо глобального `fetch`).
 
-**Ручное изменение статуса ссылки** (`apps/api/src/domains/links/update-status.ts`): `PATCH /api/links/stats/:secretToken`, body — `UpdateLinkStatusRequest` (см. «Общие типы»). Единственный писатель в `Link.status` кроме `expire-sweep`. `secretToken` не найден → `404`; текущий статус `EXPIRED` → `409 LINK_EXPIRED` (нельзя вручную «оживить» истёкшую ссылку); тело не проходит Zod (`status` вне `ACTIVE`/`DISABLED`) → `400 INVALID_STATUS`. Не идемпотентно по счётчикам — идемпотентно по эффекту (повторный `PATCH` с тем же `status` — no-op, финальное состояние совпадает).
-
 ## Общие типы
 
 Путь: `packages/shared/src/`.
@@ -190,7 +180,6 @@ SSRF-guard на fetch: только `http`/`https`, резолв хоста че
 - `schemas/create-link.ts` — Zod: `CreateLinkRequest { targetUrl: string; expiresInHours?: number; utm?: { source?: string; medium?: string; campaign?: string } }`, `CreateLinkResponse { shortUrl: string; uid: string; secretToken: string; qrUrl: string }`.
 - `schemas/bulk-text.ts` — Zod: `BulkTextRequest { text: string }` (лимит 50 000 символов, максимум 200 ссылок за запрос), `BulkTextResponse { text: string; created: Array<{ original: string; short: string }> }`.
 - `schemas/link-stats.ts` — Zod: `LinkStatsResponse { uid: string; shortUrl: string; status: LinkStatus; targetUrl: string; createdAt: string; expiresAt: string | null; clickCount: number; clicks: Array<{ occurredAt: string; referrer: string | null }> }`. `GET /api/links/stats/:secretToken`, без аккаунта. `clicks` — последние 100 по `occurredAt` desc, без пагинации в MVP.
-- `schemas/update-link-status.ts` — Zod: `UpdateLinkStatusRequest { status: 'ACTIVE' | 'DISABLED' }`, `UpdateLinkStatusResponse { uid: string; status: LinkStatus }`. `PATCH /api/links/stats/:secretToken`, без аккаунта, тот же принцип доступа, что у статистики. `EXPIRED` не принимается как целевой статус (система выставляет его только через `expire-sweep`); ссылка, уже находящаяся в `EXPIRED`, статус вручную не меняет — `409 LINK_EXPIRED`.
 
 ## UI-примитивы
 
@@ -217,8 +206,8 @@ SSRF-guard на fetch: только `http`/`https`, резолв хоста че
 
 - Миграции: `apps/api/prisma/migrations/*`, генерируются из `schema.prisma`, применяются шагом деплоя (`prisma migrate deploy`).
 - Сид-скрипт: `apps/api/src/db/seed.ts` — несколько демо-ссылок (активная, истёкшая, без клика) с демо-кликами для фейковых данных kitchen-sink/статистики.
-- Конфиг: `apps/api/src/config/env.ts`, `apps/web/src/config/env.ts` и `apps/bot/src/config/env.ts`, единая точка чтения переменных окружения.
-- `.env.example` в корне — все переменные, без реальных секретов: `DATABASE_URL`, `BASE_LINK_DOMAIN`, `BASE_FALLBACK_URL`, `IP_HASH_SALT`, `TELEGRAM_BOT_TOKEN`, `BOT_API_BASE_URL`.
+- Конфиг: `apps/api/src/config/env.ts` и `apps/web/src/config/env.ts`, единая точка чтения переменных окружения.
+- `.env.example` в корне — все переменные, без реальных секретов: `DATABASE_URL`, `BASE_LINK_DOMAIN`, `BASE_FALLBACK_URL`, `IP_HASH_SALT`.
 
 ## Конвенции кода
 
@@ -311,18 +300,6 @@ SSRF-guard на fetch: только `http`/`https`, резолв хоста че
 Критерии приёмки: при создании можно задать UTM-метки, они домерживаются в целевой URL при редиректе.
 Тесты: контрактный на UTM-merge при редиректе.
 
-### Задача 5 — Telegram-бот
-
-Цель: `apps/bot` — тонкий Telegram-клиент поверх уже существующих эндпоинтов `apps/api`, без своей БД.
-Контракты/типы: `CreateLinkRequest`/`CreateLinkResponse`, `LinkStatsResponse`, `UpdateLinkStatusRequest`/`UpdateLinkStatusResponse` (все — раздел «Общие типы»).
-Критерии приёмки:
-- сообщение с одиночным URL → бот отвечает короткой ссылкой в течение одного round-trip к `apps/api` (никакой очереди/отложенной обработки);
-- под ответом — inline-кнопки «Статистика» (дёргает `GET /api/links/stats/:secretToken`) и «Отключить»/«Включить» (дёргает `PATCH /api/links/stats/:secretToken`, кнопка меняет подпись на актуальный статус после нажатия);
-- `secretToken` едет только в `callback_data` конкретного Telegram-сообщения, бот не хранит его отдельно нигде (ни в файле, ни в БД) — «управление» ссылками существует только как история чата на стороне Telegram;
-- невалидный URL в сообщении → бот отвечает понятной ошибкой на русском, ничего не создаёт.
-Тесты: контрактный на разбор ответа `apps/api` в `api-client.ts` (валидный `CreateLinkResponse`/`LinkStatsResponse`/`UpdateLinkStatusResponse` → корректно распарсен; `ApiResponse` с `error` → выброшено типизированное исключение), путь ошибки (невалидный URL, `apps/api` вернул `404`/`409`).
-Что не трогать: `apps/api/src/domains/links/*`, `apps/web`, `packages/shared` — кроме уже добавленной в v9 схемы `update-link-status.ts`.
-
 ## Очередь контрактов
 
 Формат записи при `CONTRACT GAP`:
@@ -349,8 +326,4 @@ SSRF-guard на fetch: только `http`/`https`, резолв хоста че
   Временная заглушка: не потребовалась — гэп закрыт в том же PR отдельным контрактным коммитом перед фиче-кодом (как v2).
   Статус: closed (v8)
 
-- Что нужно: `PATCH /api/links/stats/:secretToken` — ручное переключение `Link.status` между `ACTIVE`/`DISABLED`.
-  Зачем: Telegram-бот (Задача 5) даёт кнопку «Отключить»/«Включить» под своим ответом; до v9 в API не было ни одного писателя в `status`, кроме `expire-sweep`.
-  Предлагаемая форма: см. «Ручное изменение статуса ссылки» в разделе «Контракты фоновой работы и событий», схема `schemas/update-link-status.ts`.
-  Временная заглушка: не потребовалась — гэп закрыт в том же PR отдельным контрактным коммитом перед кодом бота (как v2, v8).
-  Статус: closed (v9)
+Запись, закрытая в v9 (`PATCH /api/links/stats/:secretToken` для Telegram-бота), удалена в v10 вместе с контрактом, который она описывала — см. Changelog v10.
