@@ -1,4 +1,5 @@
 import { useTheme } from './useTheme';
+import { reachGoal } from '../analytics/metrika';
 import styles from './ThemeToggle.module.css';
 
 // Icon shown is what the click will switch TO: dark theme showing sun, light theme showing moon.
@@ -15,7 +16,10 @@ export function ThemeToggle() {
     <button
       type="button"
       className={styles.toggle}
-      onClick={toggleTheme}
+      onClick={() => {
+        toggleTheme();
+        reachGoal('theme_toggle', { theme: switchingTo });
+      }}
       aria-label={`Переключить на тему «${THEME_LABEL_RU[switchingTo]}»`}
     >
       {theme === 'obsidian' ? <SunIcon className={styles.icon} /> : <MoonIcon className={styles.icon} />}

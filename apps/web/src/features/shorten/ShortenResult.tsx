@@ -17,7 +17,7 @@ export function ShortenResult({ result }: ShortenResultProps) {
         <p className={styles.note}>Короткая ссылка</p>
         <div className={styles.row}>
           <Input readOnly monospace value={result.shortUrl} />
-          <CopyButton value={result.shortUrl} />
+          <CopyButton value={result.shortUrl} goal="copy_short_link" />
         </div>
       </div>
 
@@ -27,7 +27,7 @@ export function ShortenResult({ result }: ShortenResultProps) {
         <p className={styles.note}>Ссылка на статистику — держите в секрете</p>
         <div className={styles.row}>
           <Input readOnly monospace value={statsUrl} />
-          <CopyButton value={statsUrl} />
+          <CopyButton value={statsUrl} goal="copy_secret_link" />
         </div>
       </div>
     </div>

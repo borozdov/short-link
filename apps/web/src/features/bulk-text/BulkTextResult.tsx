@@ -15,7 +15,7 @@ export function BulkTextResult({ result }: BulkTextResultProps) {
         <p className={styles.note}>Изменённый текст</p>
         <div className={styles.row}>
           <Textarea readOnly monospace rows={12} value={result.text} />
-          <CopyButton value={result.text} />
+          <CopyButton value={result.text} goal="copy_bulk_text" />
         </div>
       </div>
 
@@ -29,7 +29,7 @@ export function BulkTextResult({ result }: BulkTextResultProps) {
               <li key={item.short} className={styles.listItem}>
                 <span className={styles.original}>{item.original}</span>
                 <span className={styles.short}>{item.short}</span>
-                <CopyButton value={item.short} />
+                <CopyButton value={item.short} goal="copy_bulk_link" />
               </li>
             ))}
           </ul>

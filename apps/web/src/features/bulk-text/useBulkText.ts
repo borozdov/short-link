@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { BulkTextRequest, BulkTextResponse } from '@short-link/shared';
 import { ApiError, shortenBulkText } from '../../api/client';
 import { useToast } from '../../primitives/useToast';
+import { reachGoal } from '../../analytics/metrika';
 
 export function useBulkText() {
   const [result, setResult] = useState<BulkTextResponse | null>(null);
@@ -13,8 +14,10 @@ export function useBulkText() {
     try {
       const response = await shortenBulkText(payload);
       setResult(response);
+      reachGoal('bulk_text_success');
     } catch (error) {
       showToast(error instanceof ApiError ? error.message : 'Что-то пошло не так');
+      reachGoal('bulk_text_error');
     } finally {
       setLoading(false);
     }

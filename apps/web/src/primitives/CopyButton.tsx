@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
+import { reachGoal } from '../analytics/metrika';
 import styles from './CopyButton.module.css';
 
 export interface CopyButtonProps {
   value: string;
   label?: string;
+  goal?: string;
 }
 
-export function CopyButton({ value, label = 'Копировать' }: CopyButtonProps) {
+export function CopyButton({ value, label = 'Копировать', goal }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -15,6 +17,7 @@ export function CopyButton({ value, label = 'Копировать' }: CopyButton
   async function handleCopy() {
     await navigator.clipboard.writeText(value);
     setCopied(true);
+    if (goal) reachGoal(goal);
     clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => setCopied(false), 1200);
   }
