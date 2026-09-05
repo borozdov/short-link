@@ -4,7 +4,7 @@
   "description": "Сократитель ссылок с QR-кодом, UTM-метками и приватной статистикой переходов.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0d0d0d",
+  "background_color": "#ffffff",
   "theme_color": "#0d0d0d",
   "lang": "ru",
   "icons": [
