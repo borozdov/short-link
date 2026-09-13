@@ -46,4 +46,20 @@ describe('GET /api/links/stats/:secretToken', () => {
     expect(response.body.data.clicks).toHaveLength(2);
     expect(response.body.data.status).toBe('ACTIVE');
   });
+
+  it('round-trips the note field', async () => {
+    const link = await prisma.link.create({
+      data: {
+        uid: 'statslnk3',
+        targetUrl: 'https://example.com/stats3',
+        secretToken: 'stats-secret-token-3',
+        note: 'Для партнёров',
+      },
+    });
+
+    const response = await request(app).get(`/api/links/stats/${link.secretToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.note).toBe('Для партнёров');
+  });
 });

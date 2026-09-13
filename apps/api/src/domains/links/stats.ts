@@ -21,6 +21,7 @@ export async function getLinkStats(req: Request<{ secretToken: string }>, res: R
       shortUrl: `${env.BASE_LINK_DOMAIN}/${link.uid}`,
       status: link.status,
       targetUrl: link.targetUrl,
+      note: link.note,
       createdAt: link.createdAt.toISOString(),
       expiresAt: link.expiresAt?.toISOString() ?? null,
       clickCount: link.clickCount,

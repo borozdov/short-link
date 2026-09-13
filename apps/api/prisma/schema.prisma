@@ -17,6 +17,7 @@ model Link {
   utmSource   String?
   utmMedium   String?
   utmCampaign String?
+  note        String?                          // заметка автора, задаётся только при создании, до 500 символов
   clickCount  Int        @default(0)           // денормализовано, инкремент в транзакции клика
   createdAt   DateTime   @default(now())
   clicks      Click[]

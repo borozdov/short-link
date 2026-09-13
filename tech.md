@@ -1,6 +1,6 @@
 # BOROZDOV LINK — tech.md
 
-v10 — откат Telegram-бота
+v11 — добавлено поле Link.note
 
 ## Changelog
 
@@ -14,6 +14,7 @@ v10 — откат Telegram-бота
 - v8 — превью коротких ссылок для ботов соцсетей/мессенджеров на `GET /:uid` (`domains/links/bot-preview.ts`): зеркалирование `og:title`/`og:description`/`og:image` целевой страницы вместо редиректа, SSRF-защищённый server-side fetch, in-memory кэш. Схема/миграции не тронуты — новых полей нет. См. «Bot-preview на редиректе» в разделе «Контракты фоновой работы и событий».
 - v9 — Telegram-бот (`apps/bot`, Задача 5): мгновенное сокращение ссылки прямо в чате и ручное вкл/выкл ссылки из бота. Новый контракт `PATCH /api/links/stats/:secretToken` (`schemas/update-link-status.ts`) — единственный способ поменять `Link.status` руками, помимо `expire-sweep`; доступ, как и к статистике, только по `secretToken`, никакого понятия владельца не вводится. Бот не хранит собственную БД — список ссылок пользователя живёт только в истории чата Telegram (кнопки под каждым ответом бота), схема/миграции не тронуты.
 - v10 — Telegram-бот убран целиком по решению владельца (не нужен продукту): `apps/bot`, контракт `PATCH /api/links/stats/:secretToken` и схема `schemas/update-link-status.ts` из v9 удалены. `Link.status` снова меняется только через `expire-sweep`. Задача 5 из «Треки» и соответствующая запись из «Очереди контрактов» удалены вместе с контрактом, который они описывали.
+- v11 — добавлено необязательное поле `Link.note` (заметка автора ссылки, задаётся только при создании, до 500 символов, редактирования после создания нет): `schemas/create-link.ts`, `types/Link.ts`, `schemas/link-stats.ts`, `domains/links/create.ts`, `domains/links/stats.ts`, форма создания и страница статистики (миграция `add_link_note`).
 
 ## Проект
 
@@ -104,6 +105,7 @@ model Link {
   utmSource   String?
   utmMedium   String?
   utmCampaign String?
+  note        String?                          // заметка автора, задаётся только при создании, до 500 символов
   clickCount  Int        @default(0)           // денормализовано, инкремент в транзакции клика
   createdAt   DateTime   @default(now())
   clicks      Click[]

@@ -23,6 +23,7 @@ const EXPIRY_OPTIONS = [
 
 interface FieldErrors {
   targetUrl?: string;
+  note?: string;
 }
 
 export interface ShortenFormProps {
@@ -32,6 +33,7 @@ export interface ShortenFormProps {
 
 export function ShortenForm({ loading, onSubmit }: ShortenFormProps) {
   const [targetUrl, setTargetUrl] = useState('');
+  const [note, setNote] = useState('');
   const [expiresValue, setExpiresValue] = useState('');
   const [utmSource, setUtmSource] = useState('');
   const [utmMedium, setUtmMedium] = useState('');
@@ -52,6 +54,7 @@ export function ShortenForm({ loading, onSubmit }: ShortenFormProps) {
 
     const payload = {
       targetUrl,
+      note: note.trim() || undefined,
       expiresInHours: expiresValue ? Number(expiresValue) : undefined,
       utm,
     };
@@ -61,6 +64,7 @@ export function ShortenForm({ loading, onSubmit }: ShortenFormProps) {
       const nextErrors: FieldErrors = {};
       for (const issue of parsed.error.issues) {
         if (issue.path[0] === 'targetUrl') nextErrors.targetUrl = 'Введите корректный URL';
+        if (issue.path[0] === 'note') nextErrors.note = 'Слишком длинное примечание (макс. 500 символов)';
       }
       setErrors(nextErrors);
       return;
@@ -78,6 +82,13 @@ export function ShortenForm({ loading, onSubmit }: ShortenFormProps) {
         value={targetUrl}
         onChange={(event) => setTargetUrl(event.target.value)}
         error={errors.targetUrl}
+      />
+      <Input
+        label="Примечание (необязательно)"
+        placeholder="Для чего эта ссылка"
+        value={note}
+        onChange={(event) => setNote(event.target.value)}
+        error={errors.note}
       />
       <Select label="Срок действия" value={expiresValue} onChange={setExpiresValue} options={EXPIRY_OPTIONS} />
       <p className={styles.sectionLabel}>UTM-метки (необязательно)</p>

@@ -5,6 +5,7 @@ export const LinkStatsResponseSchema = z.object({
   shortUrl: z.string(),
   status: z.enum(['ACTIVE', 'EXPIRED', 'DISABLED']),
   targetUrl: z.string(),
+  note: z.string().nullable(),
   createdAt: z.string(),
   expiresAt: z.string().nullable(),
   clickCount: z.number(),

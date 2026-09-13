@@ -36,3 +36,35 @@ describe('POST /api/links — anonymous creation', () => {
     expect(link.targetUrl).toBe('https://example.com/anon');
   });
 });
+
+describe('POST /api/links — note', () => {
+  it('persists a note when provided', async () => {
+    const response = await request(app)
+      .post('/api/links')
+      .send({ targetUrl: 'https://example.com/note', note: 'Для рассылки' });
+
+    expect(response.status).toBe(201);
+    const link = await prisma.link.findUniqueOrThrow({ where: { uid: response.body.data.uid } });
+    expect(link.note).toBe('Для рассылки');
+  });
+
+  it('stores null when note is omitted', async () => {
+    const response = await request(app).post('/api/links').send({ targetUrl: 'https://example.com/no-note' });
+
+    expect(response.status).toBe(201);
+    const link = await prisma.link.findUniqueOrThrow({ where: { uid: response.body.data.uid } });
+    expect(link.note).toBeNull();
+  });
+
+  it('rejects a note longer than 500 characters', async () => {
+    const before = await prisma.link.count();
+
+    const response = await request(app)
+      .post('/api/links')
+      .send({ targetUrl: 'https://example.com/too-long', note: 'a'.repeat(501) });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe('INVALID_NOTE');
+    expect(await prisma.link.count()).toBe(before);
+  });
+});

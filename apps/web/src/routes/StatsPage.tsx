@@ -67,6 +67,12 @@ export function StatsPage() {
           </div>
           <p className={styles.target}>{data.targetUrl}</p>
           <dl className={styles.meta}>
+            {data.note && (
+              <div>
+                <dt>Примечание</dt>
+                <dd>{data.note}</dd>
+              </div>
+            )}
             <div>
               <dt>Создана</dt>
               <dd>{formatDate(data.createdAt)}</dd>

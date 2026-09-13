@@ -18,6 +18,9 @@ function throwForValidationError(error: z.ZodError): never {
   if (field === 'expiresInHours') {
     throw new HttpError(400, 'INVALID_EXPIRES_IN_HOURS', message);
   }
+  if (field === 'note') {
+    throw new HttpError(400, 'INVALID_NOTE', 'Примечание не должно превышать 500 символов');
+  }
   throw new HttpError(400, 'INVALID_TARGET_URL', 'targetUrl должен быть корректным URL');
 }
 
@@ -46,6 +49,7 @@ function baseLinkData(input: CreateLinkRequest) {
     utmSource: input.utm?.source ?? null,
     utmMedium: input.utm?.medium ?? null,
     utmCampaign: input.utm?.campaign ?? null,
+    note: input.note?.trim() || null,
   };
 }
 

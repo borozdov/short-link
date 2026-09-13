@@ -10,6 +10,7 @@ export const CreateLinkRequestSchema = z.object({
       campaign: z.string().optional(),
     })
     .optional(),
+  note: z.string().trim().max(500).optional(),
 });
 
 export type CreateLinkRequest = z.infer<typeof CreateLinkRequestSchema>;

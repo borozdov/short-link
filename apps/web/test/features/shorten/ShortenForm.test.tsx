@@ -52,4 +52,38 @@ describe('ShortenPage', () => {
       }),
     );
   });
+
+  it('includes the note in the payload when filled in', async () => {
+    const user = userEvent.setup();
+    render(
+      <ToastProvider>
+        <ShortenPage />
+      </ToastProvider>,
+    );
+
+    await user.type(screen.getByLabelText(/целевой url/i), 'https://example.com');
+    await user.type(screen.getByLabelText(/примечание/i), 'Для рассылки');
+    await user.click(screen.getByRole('button', { name: /сократить/i }));
+
+    await screen.findByDisplayValue('http://localhost:4000/abc1234');
+
+    expect(createLink).toHaveBeenCalledWith(expect.objectContaining({ note: 'Для рассылки' }));
+  });
+
+  it('shows a field error when the note is too long', async () => {
+    const callsBefore = vi.mocked(createLink).mock.calls.length;
+    const user = userEvent.setup();
+    render(
+      <ToastProvider>
+        <ShortenPage />
+      </ToastProvider>,
+    );
+
+    await user.type(screen.getByLabelText(/целевой url/i), 'https://example.com');
+    await user.type(screen.getByLabelText(/примечание/i), 'a'.repeat(501));
+    await user.click(screen.getByRole('button', { name: /сократить/i }));
+
+    expect(await screen.findByText(/слишком длинное примечание/i)).toBeInTheDocument();
+    expect(vi.mocked(createLink).mock.calls.length).toBe(callsBefore);
+  });
 });

@@ -10,6 +10,7 @@ export interface Link {
   utmSource: string | null;
   utmMedium: string | null;
   utmCampaign: string | null;
+  note: string | null;
   clickCount: number;
   createdAt: string;
 }
